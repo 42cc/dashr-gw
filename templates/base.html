@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+
+<html lang="en" class="no-js">
+    <head>
+        <title>{% block title %}DASH Rippe Gateway{% endblock %}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        {% include "favicon.html" %}
+
+        {% block head_css %}{% endblock head_css %}
+        {% block head_js %}{% endblock head_js %}
+
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+        <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+        {% block header %}
+					<h1>Header</h1>
+        {% endblock header %}
+
+        <div class="container main-content">
+            {% block content %}
+							Main content
+            {% endblock content %}
+        </div>
+
+				{% block footer %}
+					<i>Footer</i>
+				{% endblock footer %}
+
+        {% block body_js %}{% endblock body_js %}
+    </body>
+</html>
+

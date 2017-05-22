@@ -1,0 +1,56 @@
+#
+# Excluded objects
+#
+
+*.py[cod]
+.*
+!.babelrc
+!.coveragerc
+!.dockerignore
+!.flowconfig
+!.gitignore
+!.nvmrc
+!.pylintrc
+!.travis*
+!.eslintrc.json
+*.css
+*.log
+*.pot
+*.pyc
+local_settings.py
+__pycache__/
+build/
+dist/
+*\.egg*
+# data
+/docs/_build/
+/media/
+/node_modules/
+webpack-bundle.json
+*~
+*.sublime*
+build/
+Vagrantfile
+puppet/
+log/*
+run/*
+*.sqlite3
+*.db
+*.sqlite3-journal
+*.log
+*.css.map
+*.e4p
+
+#
+# local midifiable
+#
+
+gateway/settings_local.py
+Makefile.def
+
+#
+# Included objects
+#
+
+!.gitignore
+!.reviewboardrc

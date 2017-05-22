@@ -1,0 +1,16 @@
+SHELL=/bin/bash
+
+PROJECT_NAME=gateway
+BIND_TO=127.0.0.1
+RUNSERVER_PORT=8000
+SETTINGS=gateway.settings
+TEST_APP?=
+
+PYTHONPATH=$(CURDIR)
+
+MANAGE= PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admin.py
+
+test: buildbot_test
+
+buildbot_test: install
+	echo "Buildbot placeholder"
