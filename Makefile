@@ -24,22 +24,9 @@ MANAGE = PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admi
 # TARGETS
 ########################
 
-yarn:
-	yarn start
-
 run:
 	@echo Starting $(PROJECT_NAME)...
 	$(MANAGE) runserver $(BIND_TO):$(RUNSERVER_PORT)
-
-syncdb:
-	@echo Syncing...
-	$(MANAGE) syncdb --noinput
-	$(MANAGE) migrate --noinput
-	$(MANAGE) update_index
-	@echo Done
-
-initproject: syncdb
-	$(MANAGE) migrate --noinput
 
 shell:
 	@echo Starting shell...
@@ -48,10 +35,20 @@ shell:
 flake8:
 	$(flake8) gateway
 
-# test: flake8
-# 	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
-test:
-	DJANGO_SETTINGS_MODULE=$(TEST_SETTINGS) py.test
+test: flake8
+ 	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
+
+pre-install:
+	-sudo apt-get install yui-compressor
+	sudo npm install -g less
+
+install:
+	npm install
+	pip install -r requirements.txt
+
+post-install:
+	$(MAKE) migrate
+    webpack --config webpack.config.js --watch
 
 collectstatic:
 	@echo Collecting static

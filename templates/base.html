@@ -1,40 +1,50 @@
 <!DOCTYPE html>
 {% load staticfiles %}
+{% load compress %}
 
 <html lang="en" class="no-js">
-    <head>
-        <title>{% block title %}DASH Rippe Gateway{% endblock %}</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        {% include "favicon.html" %}
+<head>
+	<title>{% block title %}DASH Rippe Gateway{% endblock %}</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	{% include "favicon.html" %}
 
-        {% block head_css %}{% endblock head_css %}
-        {% block head_js %}{% endblock head_js %}
+	{% compress css %}
+		<link type="text/less" rel="stylesheet" href="{% static 'less/base.less' %}">
+		{% block head_css %}{% endblock head_css %}
+	{% endcompress %}
 
-        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-        <!--[if lt IE 9]>
-        <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-        <![endif]-->
-    </head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	{% compress js inline %}
+		{% block head_js %}
+		{% endblock head_js %}
+	{% endcompress %}
 
-    <body>
-        {% block header %}
-					<h1>Header</h1>
-        {% endblock header %}
+	<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
 
-        <div class="container main-content">
-            {% block content %}
-							Main content
-            {% endblock content %}
-        </div>
+	<body>
+		{% block header %}
+			<h1>Header</h1>
+		{% endblock header %}
 
-				{% block footer %}
-					<i>Footer</i>
-				{% endblock footer %}
+		<div class="container main-content">
+			{% block content %}
+			{% endblock content %}
+		</div>
 
-        {% block body_js %}{% endblock body_js %}
-    </body>
+		{% block footer %}
+			<i>Footer</i>
+		{% endblock footer %}
+
+		{% compress js inline %}
+			{% block body_js %}{% endblock body_js %}
+		{% endcompress %}
+	</body>
 </html>
 
