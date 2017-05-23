@@ -32,6 +32,7 @@ webpack-bundle.json
 build/
 Vagrantfile
 puppet/
+assets/bundles/*
 log/*
 run/*
 *.sqlite3
