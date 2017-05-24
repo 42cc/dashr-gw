@@ -211,7 +211,6 @@ LOGGING = {
     }
 }
 
-
 # Try to load settings from ``settings_local.py`` file
 try:
     from settings_local import *
