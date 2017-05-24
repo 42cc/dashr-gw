@@ -18,6 +18,7 @@
 *.pot
 *.pyc
 local_settings.py
+settings_local.py
 __pycache__/
 build/
 dist/
