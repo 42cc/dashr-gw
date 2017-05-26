@@ -99,16 +99,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'NumericPasswordValidator',
     },
 ]
 
@@ -143,7 +147,8 @@ PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
 COMPRESS_PRECOMPILERS = (
     ('text/less', 'lessc {infile} {outfile} --autoprefix="last 2 versions"'),
 )
-COMPRESS_YUI_BINARY = 'java -jar "/usr/share/yui-compressor/yui-compressor.jar"'
+COMPRESS_YUI_BINARY = ('java -jar "/usr/share/yui-compressor/'
+                       'yui-compressor.jar"')
 
 # MEDIA
 MEDIA_URL = '/media/'
@@ -213,7 +218,7 @@ LOGGING = {
 
 # Try to load settings from ``settings_local.py`` file
 try:
-    from settings_local import *
+    from settings_local import *  # NOQA
 except ImportError, e:
     sys.stderr.write('settings_local.py not found. Using default settings\n')
     sys.stderr.write('%s: %s\n\n' % (e.__class__.__name__, e))
