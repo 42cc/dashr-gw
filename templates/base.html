@@ -12,11 +12,19 @@
 	{% include "favicon.html" %}
 
 	{% compress css %}
+		<!-- Bootstrap: https://bootswatch.com/ -->
+		<link type="text/css" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+		<!-- End Bootstrap -->
+
 		<link type="text/less" rel="stylesheet" href="{% static 'less/base.less' %}">
 		{% block head_css %}{% endblock head_css %}
 	{% endcompress %}
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+	<!-- Bootstrap -->
+	<script src="{% static 'js/libs/bootstrap.min.js' %}"></script>
+	<!-- End Bootstrap -->
 	{% compress js inline %}
 		{% block head_js %}
 		{% endblock head_js %}
@@ -30,16 +38,14 @@
 
 	<body>
 		{% block header %}
-			<h1>Header</h1>
+			{% include "includes/_navbar.html" %}
 		{% endblock header %}
 
-		<div class="container main-content">
-			{% block content %}
-			{% endblock content %}
-		</div>
+		{% block content %}
+		{% endblock content %}
 
 		{% block footer %}
-			<i>Footer</i>
+			{% include "includes/_footer.html" %}
 		{% endblock footer %}
 
 		{% compress js inline %}
