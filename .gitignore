@@ -25,6 +25,7 @@ dist/
 # data
 /docs/_build/
 /media/
+/static/
 /node_modules/
 webpack-bundle.json
 *~
