@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'compressor',
     'webpack_loader',
+    'ckeditor',
 
     'apps.core',
 ]
