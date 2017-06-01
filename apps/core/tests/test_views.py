@@ -27,11 +27,9 @@ class GetPageDetailsViewTest(TestCase):
         self.assertIn('success', content)
         self.assertIn('page', content)
         self.assertTrue(content['success'])
-
-        page_json = json.loads(content['page'])[0]
-        self.assertEqual(page_json['pk'], self.page.pk)
-        self.assertEqual(page_json['fields']['slug'], self.page.slug)
-        self.assertEqual(page_json['fields']['title'], self.page.title)
+        self.assertEqual(content['page']['id'], self.page.pk)
+        self.assertEqual(content['page']['slug'], self.page.slug)
+        self.assertEqual(content['page']['title'], self.page.title)
 
     def test_getting_page_by_slug_invalid(self):
         """ Test getting page by invalid slug """

@@ -1,69 +1,31 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {render} from 'react-dom'
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom'
+
+import Footer from "./components/MainFooter";
+import Header from "./components/MainHeader";
+import Home from "./components/Home";
+import Page from "./components/Page";
+import Wrapper from "./components/Wrapper";
+
 
 class App extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            slug: '/'
-        };
-    }
-
     render() {
-        let slug = 'about';
-
-        if (slug === '/') {
-            return (<Landing />);
-        } else {
-            return (<Page slug={slug}/>);
-        }
+        return (
+            <Router>
+                <Wrapper>
+                    <Header/>
+                    <div className='container'>
+                        <Switch>
+                            <Route exact path="/" component={Home}/>
+                            <Route path="/:slug/" component={Page}/>
+                        </Switch>
+                    </div>
+                    <Footer/>
+                </Wrapper>
+            </Router>
+        );
     }
 }
 
-class Landing extends React.Component {
-    render() {
-        return null;
-    }
-}
-
-class Page extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            page: null
-        };
-    }
-
-    loadPage() {
-        $.ajax({
-            url: this.props.slug,
-            dataType: 'json',
-            cache: false,
-            success: function (data) {
-                this.setState({page: JSON.parse(data)[0]});
-            }.bind(this),
-            error: function (xhr, status, err) {
-                console.error(status, err);
-            }.bind(this)
-        });
-    }
-
-    componentDidMount() {
-        this.loadPage();
-    }
-
-    render() {
-        let page = this.state.page,
-            pageTempate = <p>Page does not exists</p>;
-
-        if (page !== null) {
-            pageTempate = (
-                <div dangerouslySetInnerHTML={{__html: page.fields.description}}/>
-            )
-        }
-        return pageTempate;
-    }
-}
-
-const container = document.getElementById('container');
-ReactDOM.render(<App />, container);
+render(<App />, document.getElementById('root'))
