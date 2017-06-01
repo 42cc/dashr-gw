@@ -28,4 +28,4 @@ class App extends React.Component {
     }
 }
 
-ReactDOM.render(<Hello />, document.getElementById('container'))
+render(<App />, document.getElementById('root'))
