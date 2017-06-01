@@ -12,13 +12,13 @@ class PageModelTest(TestCase):
 
     def test_page_creation_valid(self):
         """ Test successfull page creation """
-
+        count_before = Page.objects.count()
         Page.objects.create(
             slug='test',
             title='test title',
             description='lorem ipsum',
         )
-        self.assertEquals(Page.objects.count(), 1)
+        self.assertEquals(Page.objects.count(), count_before + 1)
 
     def test_page_creation_invalid(self):
         """ Test page creation with invalid args """
