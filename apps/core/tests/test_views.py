@@ -20,7 +20,9 @@ class GetPageDetailsViewTest(TestCase):
         """ Test getting page by valid slug """
 
         response = self.client.get(
-            reverse('page', kwargs={'slug': self.page.slug}))
+            reverse('page', kwargs={'slug': self.page.slug}),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
@@ -35,7 +37,9 @@ class GetPageDetailsViewTest(TestCase):
         """ Test getting page by invalid slug """
 
         response = self.client.get(
-            reverse('page', kwargs={'slug': 'invalid'}))
+            reverse('page', kwargs={'slug': 'invalid'}),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
@@ -45,3 +49,15 @@ class GetPageDetailsViewTest(TestCase):
         self.assertFalse(content['success'])
         self.assertEqual(content['message'], 'Page does not exists')
         self.assertEqual(len(content['page']), 0)
+
+    def test_get_page_non_ajax(self):
+        """ Test getting page by valid slug """
+
+        response = self.client.get(
+            reverse('page', kwargs={'slug': self.page.slug}),
+        )
+        redirected_url = '{0}?next=/{1}/'.format(
+            reverse('index'), self.page.slug)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, redirected_url)
