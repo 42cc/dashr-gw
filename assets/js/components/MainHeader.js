@@ -4,6 +4,13 @@ import { LinkContainer } from 'react-router-bootstrap'
 
 
 export default class Header extends React.Component {
+    onClickWithEvent(e) {
+        if (e.ctrlKey || e.metaKey || e.button === 1) {
+            window.open(e.target.getAttribute('href'), '_blank')
+        }
+        return true;
+    }
+
     render() {
         return (
             <Navbar collapseOnSelect>
@@ -20,13 +27,13 @@ export default class Header extends React.Component {
                         <LinkContainer to="#">
                             <NavItem>FAQ</NavItem>
                         </LinkContainer>
-                        <LinkContainer to="/about/">
-                            <NavItem>About</NavItem>
+                        <LinkContainer to="/about/" onClick={this.onClickWithEvent)}>
+                            <NavItem >About</NavItem>
                         </LinkContainer>
-                        <LinkContainer to="/contact-us/">
+                        <LinkContainer to="/contact-us/" onClick={this.onClickWithEvent}>
                             <NavItem>Contact Us</NavItem>
                         </LinkContainer>
-                        <LinkContainer to="/terms-and-conditions/">
+                        <LinkContainer to="/terms-and-conditions/" onClick={this.onClickWithEvent}>
                             <NavItem>Terms and Conditions</NavItem>
                         </LinkContainer>
                     </Nav>
