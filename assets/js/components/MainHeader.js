@@ -27,7 +27,7 @@ export default class Header extends React.Component {
                         <LinkContainer to="#">
                             <NavItem>FAQ</NavItem>
                         </LinkContainer>
-                        <LinkContainer to="/about/" onClick={this.onClickWithEvent)}>
+                        <LinkContainer to="/about/" onClick={this.onClickWithEvent}>
                             <NavItem >About</NavItem>
                         </LinkContainer>
                         <LinkContainer to="/contact-us/" onClick={this.onClickWithEvent}>
