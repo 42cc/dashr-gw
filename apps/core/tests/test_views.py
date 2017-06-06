@@ -54,10 +54,8 @@ class GetPageDetailsViewTest(TestCase):
         """ Test getting page by valid slug """
 
         response = self.client.get(
-            reverse('page', kwargs={'slug': self.page.slug}),
+            reverse('page', kwargs={'slug': self.page.slug}), follow=True
         )
-        redirected_url = '{0}?next=/{1}/'.format(
-            reverse('index'), self.page.slug)
 
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, redirected_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'base.html')

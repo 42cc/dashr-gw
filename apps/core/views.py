@@ -4,10 +4,9 @@ from __future__ import unicode_literals
 from django.forms.models import model_to_dict
 from django.views.generic.base import TemplateView, View
 from django.http import JsonResponse
+from django.shortcuts import render
 
 from apps.core.models import Page
-from django.urls import reverse
-from django.shortcuts import redirect
 
 
 class IndexView(TemplateView):
@@ -33,4 +32,4 @@ class GetPageDetailsView(View):
                 ctx['page'] = model_to_dict(page[0])
 
             return JsonResponse(ctx, safe=False)
-        return redirect('{0}?next=/{1}/'.format(reverse('index'), slug))
+        return render(request, 'base.html')
