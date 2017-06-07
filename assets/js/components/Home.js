@@ -13,11 +13,11 @@ export default class Home extends React.Component {
 
     render() {
         return (
-            <Panel bsStyle="default" className="main-menu-wrapper text-center">
-                <Button bsStyle="default" className="btn-landing" href="#">
+            <Panel bsStyle="default" className="panel-wrapper panel-wrapper-main-menu">
+                <Button bsStyle="default" className="btn-landing" href="/deposit-dash/">
                     Deposit DASH to Ripple
                 </Button>
-                <Button bsStyle="default" className="btn-landing" href="#">
+                <Button bsStyle="default" className="btn-landing" href="/withdraw-dash/">
                     Withdraw DASH from Ripple
                 </Button>
             </Panel>
