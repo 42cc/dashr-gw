@@ -50,6 +50,8 @@ run/*
 gateway/settings_local.py
 Makefile.def
 
+webpack-stats.json
+
 #
 # Included objects
 #
