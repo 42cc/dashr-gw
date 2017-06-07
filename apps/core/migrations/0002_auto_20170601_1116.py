@@ -37,7 +37,11 @@ ornare est.</p>
 
 def create_base_pages(apps, schema_editor):
     Page = apps.get_model('core', 'Page')
-
+    Page.objects.create(
+        slug='faq',
+        title='FAQ',
+        description=LOREM_IPSUM % 'FAQ'
+    )
     Page.objects.create(
         slug='about',
         title='About',

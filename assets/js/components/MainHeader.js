@@ -24,7 +24,7 @@ export default class Header extends React.Component {
                 </Navbar.Header>
                 <Navbar.Collapse>
                     <Nav pullRight>
-                        <LinkContainer to="#">
+                        <LinkContainer to="/faq/" onClick={this.onClickWithEvent}>
                             <NavItem>FAQ</NavItem>
                         </LinkContainer>
                         <LinkContainer to="/about/" onClick={this.onClickWithEvent}>
