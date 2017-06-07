@@ -1,4 +1,6 @@
 import React from "react";
+import Panel from 'react-bootstrap/lib/Panel';
+import Col from 'react-bootstrap/lib/Col';
 
 
 export default class Page extends React.Component {
@@ -33,15 +35,27 @@ export default class Page extends React.Component {
     }
 
     render() {
-
         let page = this.state.page,
-            pageTempate = <p>Page does not exists</p>;
+            wrapped = this.props.wrapped,
+            pageTempate;
 
-        if (page !== null) {
+        if (wrapped == 'true' & page !== null) {
+            pageTempate = (
+                <Panel header={page.title} bsStyle="default"
+                       className="panel-wrapper panel-wrapper-container">
+                    <Col sm={12} md={12}>
+                        <div dangerouslySetInnerHTML={{__html: page.description}}/>
+                    </Col>
+                </Panel>
+            )
+        } else if (page !== null & wrapped == 'false') {
             pageTempate = (
                 <div dangerouslySetInnerHTML={{__html: page.description}}/>
             )
+        } else {
+            pageTempate = <p>Page does not exists</p>
         }
+
         return pageTempate;
     }
 }
