@@ -8,6 +8,7 @@ PROJECT_NAME=gateway
 BIND_TO=0.0.0.0
 RUNSERVER_PORT=8000
 SETTINGS=gateway.settings
+TEST_APP=apps.core
 flake8=flake8 --max-complexity=6 --exclude '*migrations*'
 
 PYTHONPATH=$(CURDIR)
@@ -36,7 +37,7 @@ flake8:
 	$(flake8) gateway
 
 test: flake8
- 	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
+	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
 
 pre-install:
 	-sudo apt-get install yui-compressor
