@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load staticfiles %}
 {% load compress %}
+{% load render_bundle from webpack_loader %}
 
 <html lang="en" class="no-js">
 <head>
@@ -37,16 +38,9 @@
 </head>
 
 	<body>
-		{% block header %}
-			{% include "includes/_navbar.html" %}
-		{% endblock header %}
-
-		{% block content %}
-		{% endblock content %}
-
-		{% block footer %}
-			{% include "includes/_footer.html" %}
-		{% endblock footer %}
+		<div id="root">
+			{% render_bundle "main" %}
+		</div>
 
 		{% compress js inline %}
 			{% block body_js %}{% endblock body_js %}

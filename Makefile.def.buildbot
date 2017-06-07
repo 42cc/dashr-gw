@@ -3,7 +3,7 @@ SHELL=/bin/bash
 PROJECT_NAME=gateway
 BIND_TO=127.0.0.1
 RUNSERVER_PORT=8000
-SETTINGS=gateway.settings
+SETTINGS=gateway.settings_buildbot
 TEST_APP?=
 
 PYTHONPATH=$(CURDIR)

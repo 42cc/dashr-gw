@@ -1,21 +1,31 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import Button from 'react-bootstrap/lib/Button';
-import Panel from 'react-bootstrap/lib/Panel';
+import {render} from 'react-dom'
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom'
 
-class Landing extends React.Component {
+import Footer from "./components/MainFooter";
+import Header from "./components/MainHeader";
+import Home from "./components/Home";
+import Page from "./components/Page";
+import Wrapper from "./components/Wrapper";
+
+
+class App extends React.Component {
     render() {
         return (
-            <Panel bsStyle="default" className="main-menu-wrapper text-center">
-                <Button bsStyle="default" className="btn-landing" href="#">
-                    Deposit DASH to Ripple
-                </Button>
-                <Button bsStyle="default" className="btn-landing" href="#">
-                    Withdraw DASH from Ripple
-                </Button>
-            </Panel>
+            <Router>
+                <Wrapper>
+                    <Header/>
+                    <div className='container'>
+                        <Switch>
+                            <Route exact path="/" component={Home}/>
+                            <Route path="/:slug/" component={Page}/>
+                        </Switch>
+                    </div>
+                    <Footer/>
+                </Wrapper>
+            </Router>
         );
     }
 }
 
-ReactDOM.render(<Landing />, document.getElementById('container'));
+render(<App />, document.getElementById('root'))
