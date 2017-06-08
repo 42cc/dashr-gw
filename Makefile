@@ -51,6 +51,9 @@ post-install:
 	$(MAKE) migrate
 	webpack --config webpack.config.js
 
+webpack:
+	webpack --config webpack.config.js
+
 collectstatic:
 	@echo Collecting static
 	$(MANAGE) collectstatic --noinput
