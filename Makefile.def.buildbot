@@ -12,5 +12,5 @@ MANAGE= PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admin
 
 test: buildbot_test
 
-buildbot_test: install
+buildbot_test: install post-install
 	echo "Buildbot placeholder"
