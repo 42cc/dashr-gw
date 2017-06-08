@@ -11,11 +11,8 @@ import InputGroup from 'react-bootstrap/lib/InputGroup';
 
 export default class DepositDash extends React.Component {
     render() {
-        const title = (
-            <h3>Deposit DASH to</h3>
-        )
         return (
-            <Panel header={title} bsStyle="default"
+            <Panel header="Deposit DASH to" bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={6}>
                     <Form>
@@ -30,7 +27,9 @@ export default class DepositDash extends React.Component {
                                 </InputGroup>
                                 <FormControl.Feedback />
                                 <HelpBlock>
-                                    <Button bsStyle="link" href="#">Need help?</Button>
+                                    <Button bsStyle="link" href="/deposit/how-to/">
+                                        Need help?
+                                    </Button>
                                 </HelpBlock>
                             </Col>
                         </FormGroup>

@@ -47,12 +47,14 @@ install:
 	npm install
 	pip install -r requirements.txt
 
-post-install:
+post-install: webpack
 	$(MAKE) migrate
-	webpack --config webpack.config.js
 
 webpack:
 	webpack --config webpack.config.js
+
+webpack-watch:
+	webpack --config webpack.config.js --watch
 
 collectstatic:
 	@echo Collecting static

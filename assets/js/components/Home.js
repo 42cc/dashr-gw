@@ -7,7 +7,7 @@ export default class Home extends React.Component {
     render() {
         return (
             <Panel bsStyle="default" className="panel-wrapper panel-wrapper-main-menu">
-                <Button bsStyle="default" className="btn-landing" href="/deposit-dash/">
+                <Button bsStyle="default" className="btn-landing" href="/deposit/">
                     Deposit DASH to Ripple
                 </Button>
                 <Button bsStyle="default" className="btn-landing" href="#">
