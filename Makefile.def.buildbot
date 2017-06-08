@@ -13,7 +13,7 @@ MANAGE= PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admin
 test: buildbot_test
 
 webpack:
-  webpack --config webpack.config.js
+ 	webpack --config webpack.config.js
 
 buildbot_test: install webpack
 	echo "Buildbot placeholder"
