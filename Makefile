@@ -49,7 +49,10 @@ install:
 
 post-install:
 	$(MAKE) migrate
-	webpack --config webpack.config.js --watch
+	webpack --config webpack.config.js
+
+webpack:
+	webpack --config webpack.config.js
 
 collectstatic:
 	@echo Collecting static
