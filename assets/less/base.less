@@ -10,10 +10,9 @@ body {
   HEADER
 */
 
-
 /*
   FOOTER
- */
+*/
 
 .footer {
   color: #fff;
@@ -29,16 +28,49 @@ body {
 }
 
 /*
-  INDEX
- */
-.main-menu-wrapper {
-  margin: 100px auto;
-  width: 50%;
+  PANEL WRAPPER
+*/
+
+.panel-wrapper {
+  text-align: center;
+  margin-top: 12%;
 }
 
 /*
-  BUTTONS
- */
-.btn-landing {
-  margin: 0 5%;
+  INDEX
+*/
+
+.panel-wrapper-main-menu {
+  width: 50%;
+  margin: 12% auto;
+
+  .btn-landing {
+    margin: 0 5%;
+  }
 }
+
+
+/*
+  PANEL CONTAINER
+*/
+
+.panel-wrapper-container {
+  .panel-heading {
+    h3 {
+      font-size: 24px;
+    }
+  }
+
+  .panel-body {
+    div[class^='col'] {
+      text-align: left;
+      float: none;
+      margin: 0 auto;
+
+      .help-block .btn-link {
+        padding: 0;
+      }
+    }
+  }
+}
+
