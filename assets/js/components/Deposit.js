@@ -11,17 +11,14 @@ import InputGroup from 'react-bootstrap/lib/InputGroup';
 
 export default class DepositDash extends React.Component {
     render() {
-        const title = (
-            <h3>Withdraw DASH from Ripple</h3>
-        )
         return (
-            <Panel header={title} bsStyle="default"
+            <Panel header="Deposit DASH to" bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={6}>
                     <Form>
                         <FormGroup controlId="id_ripple_address">
                             <Col md={12}>
-                                <ControlLabel>Enter your dash address, please:</ControlLabel>
+                                <ControlLabel>Enter your ripple address, please:</ControlLabel>
                                 <InputGroup>
                                     <FormControl type="text"/>
                                     <InputGroup.Button>
@@ -30,7 +27,9 @@ export default class DepositDash extends React.Component {
                                 </InputGroup>
                                 <FormControl.Feedback />
                                 <HelpBlock>
-                                    <Button bsStyle="link" href="#">Need help?</Button>
+                                    <Button bsStyle="link" href="/deposit/how-to/">
+                                        Need help?
+                                    </Button>
                                 </HelpBlock>
                             </Col>
                         </FormGroup>

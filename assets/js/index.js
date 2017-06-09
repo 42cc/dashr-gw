@@ -5,7 +5,8 @@ import {BrowserRouter as Router, Route, Switch} from 'react-router-dom'
 import Footer from "./components/MainFooter";
 import Header from "./components/MainHeader";
 import Home from "./components/Home";
-import WithdrawDash from "./components/WithdrawDash";
+import Deposit from "./components/Deposit";
+import Withdraw from "./components/Withdraw";
 import Page from "./components/Page";
 import Wrapper from "./components/Wrapper";
 
@@ -19,8 +20,16 @@ class App extends React.Component {
                     <div className='container'>
                         <Switch>
                             <Route exact path="/" component={Home}/>
-                            <Route path="/withdraw-dash/" component={WithdrawDash}/>
-                            <Route path="/:slug/" component={Page}/>
+
+                            <Route exact path="/deposit/" component={Deposit}/>
+                            <Route exact path="/withdraw/" component={Withdraw}/>
+
+                            <Route path="/:slug/how-to/"
+                                   component={props => <Page {...props} wrapped='true'/>}/>
+                            <Route path="/:slug/"
+                                   component={props => <Page {...props} wrapped='false' />} />
+
+
                         </Switch>
                     </div>
                     <Footer/>
