@@ -9,6 +9,7 @@ BIND_TO=0.0.0.0
 RUNSERVER_PORT=8000
 SETTINGS=gateway.settings
 TEST_APP=apps.core
+APPS=apps
 flake8=flake8 --max-complexity=6 --exclude '*migrations*'
 
 PYTHONPATH=$(CURDIR)
@@ -63,7 +64,7 @@ collectstatic:
 
 clean:
 	@echo Cleaning up...
-	find ./$(PROJECT_NAME) | grep '\.pyc$$' | xargs -I {} rm {}
+	find . | grep '\.pyc$$' | xargs -I {} rm {}
 	@echo Done
 
 manage:
