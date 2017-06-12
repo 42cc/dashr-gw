@@ -10,7 +10,7 @@ export default class Home extends React.Component {
                 <Button bsStyle="default" className="btn-landing" href="/deposit/">
                     Deposit DASH to Ripple
                 </Button>
-                <Button bsStyle="default" className="btn-landing" href="#">
+                <Button bsStyle="default" className="btn-landing" href="/withdraw/">
                     Withdraw DASH from Ripple
                 </Button>
             </Panel>
