@@ -64,7 +64,7 @@ collectstatic:
 
 clean:
 	@echo Cleaning up...
-	find . | grep '\.pyc$$' | xargs -I {} rm {}
+	find . -name '*.pyc' -delete
 	@echo Done
 
 manage:
