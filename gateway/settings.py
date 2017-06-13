@@ -33,6 +33,7 @@ ADMINS = (
 MANAGERS = ADMINS
 
 # Application definition
+sys.path.append(os.path.join(BASE_DIR, 'apps'))
 
 INSTALLED_APPS = [
     'django.contrib.admin',

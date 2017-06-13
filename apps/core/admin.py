@@ -6,7 +6,7 @@ from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.contrib import admin
 
-from .models import Page
+from apps.core.models import Page
 
 
 class PageAdminForm(forms.ModelForm):
