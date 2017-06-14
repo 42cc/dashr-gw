@@ -6,7 +6,7 @@ from django.views.generic.base import TemplateView, View
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from apps.core.models import Page
+from .models import Page
 
 
 class IndexView(TemplateView):
