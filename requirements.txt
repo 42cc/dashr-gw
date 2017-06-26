@@ -6,6 +6,7 @@ django-ckeditor==5.2.2
 django-webpack-loader==0.5.0
 packaging==16.8
 pyparsing==2.2.0
+python-bitcoinrpc==1.0
 pytz==2017.2
 rcssmin==1.0.6
 rjsmin==1.0.12
