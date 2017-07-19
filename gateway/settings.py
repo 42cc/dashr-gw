@@ -26,6 +26,12 @@ DASHD_RPCUSER = os.environ.get('DASHD_RPCUSER', 'rpcuser')
 DASHD_RPCPASSWORD = os.environ.get('DASHD_RPCPASSWORD', 'rpcpassword')
 DASHD_ACCOUNT_NAME = os.environ.get('DASHD_ACCOUNT_NAME', 'gateway')
 
+RIPPLE_ACCOUNT = os.environ.get('RIPPLE_ACCOUNT')
+RIPPLE_SECRET = os.environ.get('RIPPLE_SECRET')
+RIPPLE_API_DATA = [
+    {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
+]
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -47,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'ripple_api',
     'compressor',
     'webpack_loader',
     'ckeditor',
