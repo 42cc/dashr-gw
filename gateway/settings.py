@@ -22,6 +22,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'jksd@$=t_y2_epxck%_^%6mk$l8e6&mq)*++s%q6%yyk3!1v&x'
 
+DASHD_RPCUSER = os.environ.get('DASHD_RPCUSER', 'rpcuser')
+DASHD_RPCPASSWORD = os.environ.get('DASHD_RPCPASSWORD', 'rpcpassword')
+DASHD_ACCOUNT_NAME = os.environ.get('DASHD_ACCOUNT_NAME', 'gateway')
+
+RIPPLE_ACCOUNT = os.environ.get('RIPPLE_ACCOUNT')
+RIPPLE_SECRET = os.environ.get('RIPPLE_SECRET')
+RIPPLE_API_DATA = [
+    {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
+]
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -43,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'ripple_api',
     'compressor',
     'webpack_loader',
     'ckeditor',
