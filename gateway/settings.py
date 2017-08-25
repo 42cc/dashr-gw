@@ -30,7 +30,9 @@ try:
 
     DASHD_RPCUSER = gateway_config.get('dashd_credentials', 'rpcuser')
     DASHD_RPCPASSWORD = gateway_config.get('dashd_credentials', 'rpcpassword')
-    DASHD_ACCOUNT_NAME = gateway_config.get('dashd_credentials', 'account_name')
+    DASHD_ACCOUNT_NAME = gateway_config.get(
+        'dashd_credentials', 'account_name'
+    )
 
     RIPPLE_ACCOUNT = gateway_config.get('ripple_credentials', 'account')
     RIPPLE_SECRET = gateway_config.get('ripple_credentials', 'secret')
