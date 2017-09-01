@@ -47,6 +47,7 @@ run/*
 # local midifiable
 #
 
+celerybeat-schedule
 gateway/settings_local.py
 Makefile.def
 
