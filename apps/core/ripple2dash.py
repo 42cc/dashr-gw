@@ -28,19 +28,15 @@ def create_transaction(dash_address):
             CREATE TABLE IF NOT EXISTS ripple2dash (
                 id INTEGER PRIMARY KEY,
                 dash_address CHAR(35),
-                destination_tag CHAR(36) UNIQUE,
                 processed BOOL DEFAULT FALSE
             );
             ''',
         )
 
-        destination_tag = uuid.uuid4()
-
         cursor.execute(
             '''
-            INSERT INTO ripple2dash (dash_address, destination_tag)
-            VALUES("{}", "{}");
-            '''.format(dash_address, destination_tag),
+            INSERT INTO ripple2dash (dash_address) VALUES("{}");
+            '''.format(dash_address),
         )
 
         connection.commit()
@@ -51,7 +47,7 @@ def create_transaction(dash_address):
             ),
         )
 
-    return settings.RIPPLE_ACCOUNT, str(destination_tag)
+    return settings.RIPPLE_ACCOUNT, cursor.lastrowid
 
 
 if __name__ == '__main__':
