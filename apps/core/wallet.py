@@ -23,8 +23,17 @@ class DashWallet(object):
     def get_balance(self):
         return self._rpc_connection.getbalance(self.account_name)
 
+    def get_address_balance(self, address):
+        return self._rpc_connection.getreceivedbyaddress(
+            address,
+            settings.DASHD_MINIMAL_CONFIRMATIONS,
+        )
+
     def get_new_address(self):
         return self._rpc_connection.getnewaddress(self.account_name)
+
+    def send_to_address(self, address, amount):
+        self._rpc_connection.sendtoaddress(address, amount)
 
 
 class RippleWallet(object):

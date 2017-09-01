@@ -33,6 +33,9 @@ try:
     DASHD_ACCOUNT_NAME = gateway_config.get(
         'dashd_credentials', 'account_name'
     )
+    DASHD_MINIMAL_CONFIRMATIONS = int(
+        gateway_config.get('dashd_credentials', 'minimal_confirmations'),
+    )
 
     RIPPLE_ACCOUNT = gateway_config.get('ripple_credentials', 'account')
     RIPPLE_SECRET = gateway_config.get('ripple_credentials', 'secret')
@@ -241,7 +244,12 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True
-        }
+        },
+        'ripple': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True
+        },
     }
 }
 
