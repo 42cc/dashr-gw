@@ -38,17 +38,19 @@ def process_transactions():
 
         dash2ripple_transactions = cursor.execute(
             'SELECT * FROM dash2ripple WHERE processed="FALSE";',
-        )
+        ).fetchall()
+        if not dash2ripple_transactions:
+            logger.info('Found no Dash to Ripple transactions.')
         for transaction in dash2ripple_transactions:
             balance = dash_wallet.get_address_balance(transaction[2])
             if balance:
                 transaction_obj = RippleTransaction.objects.create(
-                    account=RippleWallet.RIPPLE_ACCOUNT,
+                    account=RippleWallet.account,
                     destination=transaction[1],
                     currency=RippleWallet.dash_currency_code,
                     value='{0:f}'.format(balance),
                 )
-                sign_task(transaction_obj.pk)
+                sign_task(transaction_obj.pk, settings.RIPPLE_SECRET)
                 submit_task(transaction_obj.pk)
                 cursor.execute(
                     '''
@@ -57,18 +59,18 @@ def process_transactions():
                 )
                 logger.info(
                     'Processed a Dash to Ripple transaction (id={}). '
-                    'Sent {0:f} DSH to {}.'.format(
+                    'Sent {:f} DSH to {}.'.format(
                         transaction[0],
                         balance,
                         transaction[1],
                     ),
                 )
-            else:
-                logger.info('Found no Dash to Ripple transactions.')
 
         ripple2dash_transactions = cursor.execute(
             'SELECT * FROM ripple2dash WHERE processed="FALSE";',
-        )
+        ).fetchall()
+        if not ripple2dash_transactions:
+            logger.info('Found no Ripple to Dash transactions.')
         for transaction in ripple2dash_transactions:
             transaction_obj = RippleTransaction.objects.filter(
                 destination=settings.RIPPLE_ACCOUNT,
@@ -87,15 +89,13 @@ def process_transactions():
                     '''.format(transaction[0]),
                 )
                 logger.info(
-                    'Processed a Ripple to Dash transaction (id={})'
+                    'Processed a Ripple to Dash transaction (id={}). '
                     'Sent {} DASH to {}.'.format(
                         transaction[0],
                         transaction_obj[0].value,
                         transaction[1],
                     ),
                 )
-            else:
-                logger.info('Found no Ripple to Dash transactions.')
 
 if __name__ == '__main__':
     process_transactions()

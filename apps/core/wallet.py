@@ -11,7 +11,7 @@ class DashWallet(object):
 
     @property
     def _dashd_url(self):
-        return 'http://{}:{}@127.0.0.1:9998'.format(
+        return 'http://{}:{}@127.0.0.1:19998'.format(
             self.rpcuser,
             self.rpcpassword,
         )
@@ -21,7 +21,10 @@ class DashWallet(object):
         return AuthServiceProxy(self._dashd_url)
 
     def get_balance(self):
-        return self._rpc_connection.getbalance(self.account_name)
+        return self._rpc_connection.getbalance(
+            self.account_name,
+            settings.DASHD_MINIMAL_CONFIRMATIONS,
+        )
 
     def get_address_balance(self, address):
         return self._rpc_connection.getreceivedbyaddress(
