@@ -30,6 +30,9 @@ run:
 	@echo Starting $(PROJECT_NAME)...
 	$(MANAGE) runserver $(BIND_TO):$(RUNSERVER_PORT)
 
+worker:
+	celery -B -A gateway worker -l INFO
+
 shell:
 	@echo Starting shell...
 	$(MANAGE) shell
