@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import uuid
+
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -15,3 +17,10 @@ class Page(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Transaction(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    class Meta:
+        abstract = True
