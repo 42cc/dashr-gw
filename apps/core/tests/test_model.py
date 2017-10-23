@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import uuid
 
+from mock import patch
+
 from django.test import TestCase
 from django.db import IntegrityError
 
@@ -48,10 +50,12 @@ class TransactionModelTest(TestCase):
 
 class DepositModelTest(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    @patch('apps.core.models.dash_wallet.get_new_address')
+    def setUpTestData(cls, patched_get_new_address):
+        cls.dash_address = 'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        patched_get_new_address.return_value = cls.dash_address
         cls.transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
-            dash_address='XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W',
         )
 
     def test_inherits_transaction_model(self):
@@ -71,3 +75,18 @@ class DepositModelTest(TestCase):
 
     def test_default_proceeded_is_false(self):
         self.assertFalse(self.transaction.proceeded)
+
+    def test_dash_address_is_automatically_set(self):
+        self.assertEqual(self.transaction.dash_address, self.dash_address)
+
+    @patch('apps.core.models.dash_wallet.get_new_address')
+    def test_dash_address_is_not_changed_on_model_save(
+        self,
+        patched_get_new_address,
+    ):
+        patched_get_new_address.return_value = (
+            'Xv4Wp2HNRzjt41X17ahxT3aFCwRseoGG39'
+        )
+        self.transaction.save()
+        self.assertEqual(self.transaction.dash_address, self.dash_address)
+        patched_get_new_address.assert_not_called()

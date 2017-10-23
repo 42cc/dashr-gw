@@ -7,6 +7,8 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext as _
 
+from apps.core.wallet import dash_wallet
+
 
 class Page(models.Model):
     slug = models.SlugField(max_length=300, db_index=True, unique=True)
@@ -46,3 +48,8 @@ class DepositTransaction(Transaction):
 
     def __str__(self):
         return 'Deposit {}'.format(self.id)
+
+    def save(self, *args, **kwargs):
+        if not self.dash_address:
+            self.dash_address = dash_wallet.get_new_address()
+        super(DepositTransaction, self).save(*args, **kwargs)

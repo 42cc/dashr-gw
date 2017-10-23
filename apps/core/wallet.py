@@ -50,3 +50,6 @@ class RippleWallet(object):
             self.dash_currency_issuer,
             self.dash_currency_code,
         )
+
+
+dash_wallet = DashWallet()
