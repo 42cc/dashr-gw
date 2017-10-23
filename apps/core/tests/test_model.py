@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import uuid
 
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.db import IntegrityError
 
