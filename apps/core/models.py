@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import uuid
 
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -24,3 +25,24 @@ class Transaction(models.Model):
 
     class Meta:
         abstract = True
+
+
+class DepositTransaction(Transaction):
+    ripple_address = models.CharField(
+        max_length=35,
+        validators=[
+            RegexValidator(
+                '^'
+                'r'
+                '[rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz]'
+                '{27,35}'
+                '$',
+                message='The Ripple address is not valid.'
+            ),
+        ],
+    )
+    dash_address = models.CharField(max_length=35)
+    proceeded = models.BooleanField(default=False)
+
+    def __str__(self):
+        return 'Deposit {}'.format(self.id)
