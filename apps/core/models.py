@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 import uuid
 
-from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext as _
 
-from apps.core.wallet import dash_wallet
+from apps.core.validators import ripple_address_validator
+from apps.core.wallet import DashWallet
 
 
 class Page(models.Model):
@@ -32,16 +32,7 @@ class Transaction(models.Model):
 class DepositTransaction(Transaction):
     ripple_address = models.CharField(
         max_length=35,
-        validators=[
-            RegexValidator(
-                '^'
-                'r'
-                '[rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz]'
-                '{27,35}'
-                '$',
-                message='The Ripple address is not valid.'
-            ),
-        ],
+        validators=[ripple_address_validator],
     )
     dash_address = models.CharField(max_length=35)
     proceeded = models.BooleanField(default=False)
@@ -50,6 +41,7 @@ class DepositTransaction(Transaction):
         return 'Deposit {}'.format(self.id)
 
     def save(self, *args, **kwargs):
+        dash_wallet = DashWallet()
         if not self.dash_address:
             self.dash_address = dash_wallet.get_new_address()
         super(DepositTransaction, self).save(*args, **kwargs)
