@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import uuid
+
+from mock import patch
+
 from django.test import TestCase
 from django.db import IntegrityError
 
-from apps.core.models import Page
+from apps.core.models import DepositTransaction, Page, Transaction
 
 
 class PageModelTest(TestCase):
@@ -32,3 +36,57 @@ class PageModelTest(TestCase):
             self.assertContains(
                 'duplicate key value violates unique constraint', error_msg
             )
+
+
+class TransactionModelTest(TestCase):
+    def test_transaction_model_abstract(self):
+        self.assertTrue(Transaction._meta.abstract)
+
+    def test_transaction_has_uuid_primary_key(self):
+        transaction = Transaction()
+        self.assertTrue(hasattr(transaction, 'id'))
+        self.assertIsInstance(transaction.id, uuid.UUID)
+
+
+class DepositModelTest(TestCase):
+    @classmethod
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def setUpTestData(cls, patched_get_new_address):
+        cls.dash_address = 'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        patched_get_new_address.return_value = cls.dash_address
+        cls.transaction = DepositTransaction.objects.create(
+            ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+        )
+
+    def test_inherits_transaction_model(self):
+        self.assertTrue(issubclass(DepositTransaction, Transaction))
+
+    def test_has_ripple_address(self):
+        self.assertTrue(hasattr(self.transaction, 'ripple_address'))
+        self.assertIsInstance(self.transaction.ripple_address, unicode)
+
+    def test_has_dash_address(self):
+        self.assertTrue(hasattr(self.transaction, 'dash_address'))
+        self.assertIsInstance(self.transaction.dash_address, unicode)
+
+    def test_has_proceeded(self):
+        self.assertTrue(hasattr(self.transaction, 'proceeded'))
+        self.assertIsInstance(self.transaction.proceeded, bool)
+
+    def test_default_proceeded_is_false(self):
+        self.assertFalse(self.transaction.proceeded)
+
+    def test_dash_address_is_automatically_set(self):
+        self.assertEqual(self.transaction.dash_address, self.dash_address)
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_dash_address_is_not_changed_on_model_save(
+        self,
+        patched_get_new_address,
+    ):
+        patched_get_new_address.return_value = (
+            'Xv4Wp2HNRzjt41X17ahxT3aFCwRseoGG39'
+        )
+        self.transaction.save()
+        self.assertEqual(self.transaction.dash_address, self.dash_address)
+        patched_get_new_address.assert_not_called()
