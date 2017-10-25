@@ -50,7 +50,7 @@ class TransactionModelTest(TestCase):
 
 class DepositModelTest(TestCase):
     @classmethod
-    @patch('apps.core.models.dash_wallet.get_new_address')
+    @patch('apps.core.models.DashWallet.get_new_address')
     def setUpTestData(cls, patched_get_new_address):
         cls.dash_address = 'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         patched_get_new_address.return_value = cls.dash_address
@@ -79,7 +79,7 @@ class DepositModelTest(TestCase):
     def test_dash_address_is_automatically_set(self):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
 
-    @patch('apps.core.models.dash_wallet.get_new_address')
+    @patch('apps.core.models.DashWallet.get_new_address')
     def test_dash_address_is_not_changed_on_model_save(
         self,
         patched_get_new_address,
