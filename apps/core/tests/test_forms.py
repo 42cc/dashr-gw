@@ -1,9 +1,6 @@
-from mock import patch
-
 from django.test import TestCase
 
 from apps.core import forms
-from apps.core.models import DepositTransaction
 
 
 class DepositTransactionModelFormTest(TestCase):
