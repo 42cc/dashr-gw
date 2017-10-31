@@ -32,7 +32,7 @@ export default class DepositDash extends React.Component {
             )
         }
         return (
-            <Panel header="Deposit DASH to" bsStyle="default"
+            <Panel header="Deposit DASH to Ripple" bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={6}>
                     <Form onSubmit={this.handleFormSubmit.bind(this)} id="deposit-form">
