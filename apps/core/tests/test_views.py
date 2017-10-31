@@ -70,14 +70,20 @@ class DepositSubmitApiViewTest(TestCase):
     def setUpTestData(cls):
         cls.factory = RequestFactory()
 
+    @patch('apps.core.views.monitor_dash_to_ripple_transaction.apply_async')
     @patch('apps.core.models.DashWallet.get_new_address')
-    def test_view_with_valid_form(self, patched_get_new_address):
+    def test_view_with_valid_form(
+            self,
+            patched_get_new_address,
+            patched_monitor_task,
+    ):
         patched_get_new_address.return_value = ''
         request = self.factory.post(
             '',
             {'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7'},
         )
         response = DepositSubmitApiView.as_view()(request)
+        patched_monitor_task.assert_called_once()
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)

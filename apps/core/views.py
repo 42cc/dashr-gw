@@ -9,6 +9,7 @@ from django.shortcuts import render
 
 from .forms import DepositTransactionModelForm
 from .models import Page
+from .tasks import monitor_dash_to_ripple_transaction
 
 
 class IndexView(TemplateView):
@@ -49,6 +50,10 @@ class DepositSubmitApiView(View, FormMixin):
 
     def form_valid(self, form):
         transaction = form.save()
+        monitor_dash_to_ripple_transaction.apply_async(
+            (transaction.id,),
+            countdown=30,
+        )
         return JsonResponse(
             {
                 'success': True,
