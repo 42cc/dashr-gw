@@ -43,6 +43,11 @@
 		</div>
 
 		{% compress js inline %}
+            <script>
+                var urls = {
+                    submitDeposit: '{% url 'submit-deposit' %}',
+                };
+            </script>
 			{% block body_js %}{% endblock body_js %}
 		{% endcompress %}
 	</body>

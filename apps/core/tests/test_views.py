@@ -2,11 +2,15 @@ from __future__ import unicode_literals
 
 import json
 
+from mock import patch
+
 from django.core.urlresolvers import reverse
+from django.http.response import JsonResponse
 from django.test import TestCase
-from django.test.client import Client
+from django.test.client import Client, RequestFactory
 
 from apps.core.models import Page
+from apps.core.views import DepositSubmitApiView
 
 
 class GetPageDetailsViewTest(TestCase):
@@ -59,3 +63,45 @@ class GetPageDetailsViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'base.html')
+
+
+class DepositSubmitApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    @patch('apps.core.views.monitor_dash_to_ripple_transaction.apply_async')
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_view_with_valid_form(
+            self,
+            patched_get_new_address,
+            patched_monitor_task,
+    ):
+        patched_get_new_address.return_value = ''
+        request = self.factory.post(
+            '',
+            {'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7'},
+        )
+        response = DepositSubmitApiView.as_view()(request)
+        patched_monitor_task.assert_called_once()
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('dash_wallet', response_content)
+        self.assertIn('status_url', response_content)
+        self.assertEqual(response_content['success'], True)
+
+    def test_view_with_invalid_form(self):
+        request = self.factory.post('', {'ripple_address': 'Invalid address'})
+        response = DepositSubmitApiView.as_view()(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('ripple_address_error', response_content)
+        self.assertEqual(response_content['success'], False)
+        self.assertEqual(
+            response_content['ripple_address_error'],
+            'The Ripple address is not valid.',
+        )
