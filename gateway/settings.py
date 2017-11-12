@@ -278,7 +278,8 @@ if not BROKER_URL:
         hostname=RABBIT_HOSTNAME,
         vhost=os.environ.get('RABBIT_ENV_VHOST', ''))
 
-# We don't want to have dead connections stored on rabbitmq, so we have to negotiate using heartbeats
+# We don't want to have dead connections stored on rabbitmq,
+# so we have to negotiate using heartbeats
 BROKER_HEARTBEAT = '?heartbeat=30'
 if not BROKER_URL.endswith(BROKER_HEARTBEAT):
     BROKER_URL += BROKER_HEARTBEAT
@@ -301,7 +302,8 @@ CELERY_TASK_PUBLISH_RETRY = True
 CELERY_DISABLE_RATE_LIMITS = False
 
 # By default we will ignore result
-# If you want to see results and try out tasks interactively, change it to False
+# If you want to see results and try out tasks interactively,
+# change it to False
 # Or change this setting on tasks level
 CELERY_IGNORE_RESULT = True
 CELERY_SEND_TASK_ERROR_EMAILS = False
