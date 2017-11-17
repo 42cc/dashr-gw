@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import uuid
 
+from django_fsm import FSMIntegerField
+
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -23,7 +25,22 @@ class Page(models.Model):
 
 
 class Transaction(models.Model):
+    INITIATED = 1
+    IN_PROGRESS = 2
+    COMPLETED = 3
+    NOT_PROCESSED = 4
+    FAILED = 5
+
+    STATE_CHOICES = (
+        (INITIATED, 'Initiated'),
+        (IN_PROGRESS, 'In progress'),
+        (COMPLETED, 'Completed'),
+        (NOT_PROCESSED, 'Not processed'),
+        (FAILED, 'Failed'),
+    )
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    state = FSMIntegerField(default=INITIATED, choices=STATE_CHOICES)
 
     class Meta:
         abstract = True

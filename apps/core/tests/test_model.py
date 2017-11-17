@@ -47,6 +47,11 @@ class TransactionModelTest(TestCase):
         self.assertTrue(hasattr(transaction, 'id'))
         self.assertIsInstance(transaction.id, uuid.UUID)
 
+    def test_has_fsm_state_field(self):
+        transaction = Transaction()
+        self.assertTrue(hasattr(transaction, 'state'))
+        self.assertEqual(transaction.state, transaction.INITIATED)
+
 
 class DepositModelTest(TestCase):
     @classmethod
