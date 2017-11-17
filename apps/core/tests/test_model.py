@@ -8,7 +8,12 @@ from mock import patch
 from django.test import TestCase
 from django.db import IntegrityError
 
-from apps.core.models import DepositTransaction, Page, Transaction
+from apps.core.models import (
+    DepositTransaction,
+    Page,
+    Transaction,
+    TransactionStates,
+)
 
 
 class PageModelTest(TestCase):
@@ -50,7 +55,7 @@ class TransactionModelTest(TestCase):
     def test_has_fsm_state_field(self):
         transaction = Transaction()
         self.assertTrue(hasattr(transaction, 'state'))
-        self.assertEqual(transaction.state, transaction.INITIATED)
+        self.assertEqual(transaction.state, TransactionStates.INITIATED)
 
 
 class DepositModelTest(TestCase):

@@ -24,7 +24,7 @@ class Page(models.Model):
         return self.title
 
 
-class Transaction(models.Model):
+class TransactionStates(object):
     INITIATED = 1
     IN_PROGRESS = 2
     COMPLETED = 3
@@ -39,8 +39,13 @@ class Transaction(models.Model):
         (FAILED, 'Failed'),
     )
 
+
+class Transaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    state = FSMIntegerField(default=INITIATED, choices=STATE_CHOICES)
+    state = FSMIntegerField(
+        default=TransactionStates.INITIATED,
+        choices=TransactionStates.STATE_CHOICES,
+    )
 
     class Meta:
         abstract = True
@@ -62,3 +67,20 @@ class DepositTransaction(Transaction):
         if not self.dash_address:
             self.dash_address = dash_wallet.get_new_address()
         super(DepositTransaction, self).save(*args, **kwargs)
+
+
+class BaseTransactionStateChange(models.Model):
+    datetime = models.DateTimeField(auto_created=True)
+    current_state = models.PositiveSmallIntegerField(
+        choices=TransactionStates.STATE_CHOICES,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class DepositTransactionStateChange(BaseTransactionStateChange):
+    transaction = models.ForeignKey(
+        DepositTransaction,
+        related_name='state_changes',
+    )
