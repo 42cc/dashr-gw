@@ -42,6 +42,7 @@ services:
       - redis
     depends_on:
       - db
+      - dashd
     ports:
       - '8000:8000'
     volumes:
@@ -63,3 +64,15 @@ services:
       - redis
     depends_on:
      - db
+     - dashd
+
+  # Dashd
+  dashd:
+    image: dashpay/dashd
+    environment:
+      - TESTNET=1
+    ports:
+      - '9999:9999'
+      - '127.0.0.1:9998:9998'
+    volumes:
+      - .dashd:/dash
