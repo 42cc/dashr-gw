@@ -6,6 +6,7 @@ import uuid
 from django_fsm import FSMIntegerField
 
 from django.db import models
+from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 
 from apps.core.validators import ripple_address_validator
@@ -68,9 +69,16 @@ class DepositTransaction(Transaction):
             self.dash_address = dash_wallet.get_new_address()
         super(DepositTransaction, self).save(*args, **kwargs)
 
+    @staticmethod
+    def post_save_signal_handler(instance, **kwargs):
+        DepositTransactionStateChange.objects.create(
+            transaction=instance,
+            current_state=instance.state,
+        )
+
 
 class BaseTransactionStateChange(models.Model):
-    datetime = models.DateTimeField(auto_created=True)
+    datetime = models.DateTimeField(auto_now_add=True)
     current_state = models.PositiveSmallIntegerField(
         choices=TransactionStates.STATE_CHOICES,
     )
@@ -84,3 +92,9 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
         DepositTransaction,
         related_name='state_changes',
     )
+
+
+post_save.connect(
+    DepositTransaction.post_save_signal_handler,
+    sender=DepositTransaction,
+)

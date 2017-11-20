@@ -10,6 +10,7 @@ from django.db import IntegrityError
 
 from apps.core.models import (
     DepositTransaction,
+    DepositTransactionStateChange,
     Page,
     Transaction,
     TransactionStates,
@@ -100,3 +101,17 @@ class DepositModelTest(TestCase):
         self.transaction.save()
         self.assertEqual(self.transaction.dash_address, self.dash_address)
         patched_get_new_address.assert_not_called()
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_state_change_instance_is_created_after_save(
+        self,
+        patched_get_new_address,
+    ):
+        self.transaction.save()
+        last_state_change = DepositTransactionStateChange.objects.last()
+        self.assertIsNotNone(last_state_change)
+        self.assertEqual(last_state_change.transaction_id, self.transaction.id)
+        self.assertEqual(
+            last_state_change.current_state,
+            self.transaction.state,
+        )
