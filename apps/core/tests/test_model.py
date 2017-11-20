@@ -115,3 +115,21 @@ class DepositModelTest(TestCase):
             last_state_change.current_state,
             self.transaction.state,
         )
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_get_state_history(self, patched_get_new_address):
+        self.transaction.save()
+        state_changes = DepositTransactionStateChange.objects.order_by(
+            'datetime',
+        ).filter(transaction=self.transaction)
+        expected_history = [
+            {
+                'state': state.get_current_state_display(),
+                'timestamp': state.datetime,
+            } for state in state_changes
+        ]
+        self.assertEqual(
+            self.transaction.get_state_history(),
+            expected_history,
+        )
+

@@ -51,6 +51,14 @@ class Transaction(models.Model):
     class Meta:
         abstract = True
 
+    def get_state_history(self):
+        return [
+            {
+                'state': state.get_current_state_display(),
+                'timestamp': state.datetime,
+            } for state in self.state_changes.order_by('datetime').all()
+        ]
+
 
 class DepositTransaction(Transaction):
     ripple_address = models.CharField(
