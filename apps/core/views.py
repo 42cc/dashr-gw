@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 from .forms import DepositTransactionModelForm
-from .models import Page
+from .models import Page, DepositTransaction
 from .tasks import monitor_dash_to_ripple_transaction
 
 
@@ -68,4 +68,20 @@ class DepositSubmitApiView(View, FormMixin):
                 'success': False,
                 'ripple_address_error': form.errors['ripple_address'][0],
             },
+        )
+
+
+class DepositStatusApiView(View):
+    @staticmethod
+    def get(request, transaction_id):
+        transaction = DepositTransaction.objects.get(id=transaction_id)
+        return JsonResponse(
+            {
+                'transactionId': transaction.id,
+                'rippleAddress': transaction.ripple_address,
+                'dashAddress': transaction.dash_address,
+                'proceeded': transaction.proceeded,
+                'state': transaction.get_state_display(),
+                'stateHistory': transaction.get_state_history(),
+            }
         )

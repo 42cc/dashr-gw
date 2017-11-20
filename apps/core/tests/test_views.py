@@ -4,13 +4,14 @@ import json
 
 from mock import patch
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import Page
-from apps.core.views import DepositSubmitApiView
+from apps.core.models import DepositTransaction, Page, TransactionStates
+from apps.core.views import DepositSubmitApiView, DepositStatusApiView
 
 
 class GetPageDetailsViewTest(TestCase):
@@ -105,3 +106,34 @@ class DepositSubmitApiViewTest(TestCase):
             response_content['ripple_address_error'],
             'The Ripple address is not valid.',
         )
+
+
+class DepositStatusApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_view_returns_valid_data(self, patched_get_new_address):
+        patched_get_new_address.return_value = (
+            'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        )
+        transaction = DepositTransaction.objects.create(
+            ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+        )
+        transaction.state = TransactionStates.IN_PROGRESS
+        transaction.save()
+        request = self.factory.get('')
+        response = DepositStatusApiView.as_view()(request, transaction.id)
+        expected_response_content = json.dumps(
+            {
+                'transactionId': transaction.id,
+                'rippleAddress': transaction.ripple_address,
+                'dashAddress': transaction.dash_address,
+                'proceeded': transaction.proceeded,
+                'state': transaction.get_state_display(),
+                'stateHistory': transaction.get_state_history(),
+            },
+            cls=DjangoJSONEncoder,
+        )
+        self.assertEqual(response.content, expected_response_content)
