@@ -7,6 +7,7 @@ from mock import patch
 
 from django.test import TestCase
 from django.db import IntegrityError
+from django.utils import formats
 
 from apps.core.models import (
     DepositTransaction,
@@ -125,7 +126,10 @@ class DepositModelTest(TestCase):
         expected_history = [
             {
                 'state': state.get_current_state_display(),
-                'timestamp': state.datetime,
+                'timestamp': formats.date_format(
+                    state.datetime,
+                    'DATETIME_FORMAT',
+                ),
             } for state in state_changes
         ]
         self.assertEqual(

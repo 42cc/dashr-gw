@@ -7,6 +7,7 @@ from django_fsm import FSMIntegerField
 
 from django.db import models
 from django.db.models.signals import post_save
+from django.utils import formats
 from django.utils.translation import ugettext as _
 
 from apps.core.validators import ripple_address_validator
@@ -55,7 +56,10 @@ class Transaction(models.Model):
         return [
             {
                 'state': state.get_current_state_display(),
-                'timestamp': state.datetime,
+                'timestamp': formats.date_format(
+                    state.datetime,
+                    'DATETIME_FORMAT',
+                ),
             } for state in self.state_changes.order_by('datetime').all()
         ]
 
