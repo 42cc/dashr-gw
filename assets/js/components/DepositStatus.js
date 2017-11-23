@@ -15,6 +15,9 @@ export default class DepositStatus extends React.Component {
         const transactionData = this.state.transactionData;
         const stateHistory = transactionData.stateHistory || [];
         if ($.isEmptyObject(transactionData)) {
+            if (this.state.transactionDoesNotExists) {
+                return <p>Page does not exists</p>;
+            }
             this.getTransactionData();
         }
         return (
@@ -51,6 +54,8 @@ export default class DepositStatus extends React.Component {
     getTransactionData() {
         $.getJSON(
             '/deposit/' + this.props.match.params.transactionId + '/status-api/',
-        ).done(data => { this.setState({transactionData: data}); });
+        )
+          .done(data => { this.setState({transactionData: data}); })
+          .fail(() => { this.setState({transactionDoesNotExists: true}); });
     }
 }

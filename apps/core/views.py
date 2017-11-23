@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormMixin
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
 from .forms import DepositTransactionModelForm
@@ -78,7 +78,7 @@ class DepositSubmitApiView(View, FormMixin):
 class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
-        transaction = DepositTransaction.objects.get(id=transaction_id)
+        transaction = get_object_or_404(DepositTransaction, id=transaction_id)
         return JsonResponse(
             {
                 'transactionId': transaction.id,
