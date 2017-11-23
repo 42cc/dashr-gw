@@ -6,6 +6,7 @@ from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormMixin
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 
 from .forms import DepositTransactionModelForm
 from .models import Page, DepositTransaction
@@ -23,7 +24,7 @@ class GetPageDetailsView(View):
     """
     View returns given by url serialized page instance
     """
-    def get(self, request, slug):
+    def get(self, request, slug, **kwargs):
         if request.is_ajax():
             ctx = {'page': [], 'success': True}
             page = Page.objects.filter(slug=slug)
@@ -58,7 +59,10 @@ class DepositSubmitApiView(View, FormMixin):
             {
                 'success': True,
                 'dash_wallet': transaction.dash_address,
-                'status_url': '/status/{}/'.format(transaction.id),
+                'status_url': reverse(
+                    'deposit-status',
+                    args=(transaction.id,),
+                ),
             },
         )
 

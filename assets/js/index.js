@@ -25,7 +25,7 @@ class App extends React.Component {
                             <Route exact path="/deposit/" component={Deposit}/>
                             <Route exact path="/withdraw/" component={Withdraw}/>
 
-                            <Route path="/deposit/:transactionId/status/"
+                            <Route path="/deposit/:transactionId/"
                                    component={DepositStatus}/>
 
                             <Route path="/:slug/how-to/"

@@ -24,9 +24,10 @@ urlpatterns = [
     ),
     url(
         r'^deposit/'
-        r'(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
-        r'(status)/',
+        r'(?P<transaction_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-'
+        r'[0-9a-f]{12})/',
         GetPageDetailsView.as_view(),
+        {'slug': 'status'},
         name='deposit-status',
     ),
     url(r'^(?P<slug>[a-z0-9-]+?)/$',
