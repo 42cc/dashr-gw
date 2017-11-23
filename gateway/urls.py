@@ -15,11 +15,18 @@ urlpatterns = [
     url(r'^submit-deposit/$',
         DepositSubmitApiView.as_view(), name='submit-deposit'),
     url(
+            r'^deposit/'
+            r'(?P<transaction_id>'
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
+            r'status-api/',
+            DepositStatusApiView.as_view(),
+            name='deposit-status-api',
+    ),
+    url(
         r'^deposit/'
-        r'(?P<transaction_id>'
-        r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
-        r'status/',
-        DepositStatusApiView.as_view(),
+        r'(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
+        r'(status)/',
+        GetPageDetailsView.as_view(),
         name='deposit-status',
     ),
     url(r'^(?P<slug>[a-z0-9-]+?)/$',

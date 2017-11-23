@@ -6,6 +6,7 @@ import Footer from "./components/MainFooter";
 import Header from "./components/MainHeader";
 import Home from "./components/Home";
 import Deposit from "./components/Deposit";
+import DepositStatus from "./components/DepositStatus";
 import Withdraw from "./components/Withdraw";
 import Page from "./components/Page";
 import Wrapper from "./components/Wrapper";
@@ -23,6 +24,9 @@ class App extends React.Component {
 
                             <Route exact path="/deposit/" component={Deposit}/>
                             <Route exact path="/withdraw/" component={Withdraw}/>
+
+                            <Route path="/deposit/:transactionId/status/"
+                                   component={DepositStatus}/>
 
                             <Route path="/:slug/how-to/"
                                    component={props => <Page {...props} wrapped='true'/>}/>
