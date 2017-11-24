@@ -5,10 +5,11 @@ from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormMixin
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 from .forms import DepositTransactionModelForm
-from .models import Page
+from .models import Page, DepositTransaction
 from .tasks import monitor_dash_to_ripple_transaction
 
 
@@ -23,7 +24,7 @@ class GetPageDetailsView(View):
     """
     View returns given by url serialized page instance
     """
-    def get(self, request, slug):
+    def get(self, request, slug, **kwargs):
         if request.is_ajax():
             ctx = {'page': [], 'success': True}
             page = Page.objects.filter(slug=slug)
@@ -58,7 +59,10 @@ class DepositSubmitApiView(View, FormMixin):
             {
                 'success': True,
                 'dash_wallet': transaction.dash_address,
-                'status_url': '/status/{}/'.format(transaction.id),
+                'status_url': reverse(
+                    'deposit-status',
+                    args=(transaction.id,),
+                ),
             },
         )
 
@@ -68,4 +72,20 @@ class DepositSubmitApiView(View, FormMixin):
                 'success': False,
                 'ripple_address_error': form.errors['ripple_address'][0],
             },
+        )
+
+
+class DepositStatusApiView(View):
+    @staticmethod
+    def get(request, transaction_id):
+        transaction = get_object_or_404(DepositTransaction, id=transaction_id)
+        return JsonResponse(
+            {
+                'transactionId': transaction.id,
+                'rippleAddress': transaction.ripple_address,
+                'dashAddress': transaction.dash_address,
+                'proceeded': transaction.proceeded,
+                'state': transaction.get_state_display(),
+                'stateHistory': transaction.get_state_history(),
+            }
         )

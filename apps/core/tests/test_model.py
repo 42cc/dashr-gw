@@ -7,8 +7,15 @@ from mock import patch
 
 from django.test import TestCase
 from django.db import IntegrityError
+from django.utils import formats
 
-from apps.core.models import DepositTransaction, Page, Transaction
+from apps.core.models import (
+    DepositTransaction,
+    DepositTransactionStateChange,
+    Page,
+    Transaction,
+    TransactionStates,
+)
 
 
 class PageModelTest(TestCase):
@@ -46,6 +53,11 @@ class TransactionModelTest(TestCase):
         transaction = Transaction()
         self.assertTrue(hasattr(transaction, 'id'))
         self.assertIsInstance(transaction.id, uuid.UUID)
+
+    def test_has_fsm_state_field(self):
+        transaction = Transaction()
+        self.assertTrue(hasattr(transaction, 'state'))
+        self.assertEqual(transaction.state, TransactionStates.INITIATED)
 
 
 class DepositModelTest(TestCase):
@@ -90,3 +102,38 @@ class DepositModelTest(TestCase):
         self.transaction.save()
         self.assertEqual(self.transaction.dash_address, self.dash_address)
         patched_get_new_address.assert_not_called()
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_state_change_instance_is_created_after_save(
+        self,
+        patched_get_new_address,
+    ):
+        self.transaction.save()
+        last_state_change = DepositTransactionStateChange.objects.last()
+        self.assertIsNotNone(last_state_change)
+        self.assertEqual(last_state_change.transaction_id, self.transaction.id)
+        self.assertEqual(
+            last_state_change.current_state,
+            self.transaction.state,
+        )
+
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def test_get_state_history(self, patched_get_new_address):
+        self.transaction.save()
+        state_changes = DepositTransactionStateChange.objects.order_by(
+            'datetime',
+        ).filter(transaction=self.transaction)
+        expected_history = [
+            {
+                'state': state.get_current_state_display(),
+                'timestamp': formats.date_format(
+                    state.datetime,
+                    'DATETIME_FORMAT',
+                ),
+            } for state in state_changes
+        ]
+        self.assertEqual(
+            self.transaction.get_state_history(),
+            expected_history,
+        )
+
