@@ -36,9 +36,9 @@ export default class DepositStatus extends React.Component {
                             </tr>
                         </thead>
                         <tbody>
-                            {stateHistory.map(state =>{
+                            {stateHistory.map((state, i) =>{
                                 return (
-                                    <tr>
+                                    <tr key={i}>
                                         <td>{state.timestamp}</td>
                                         <td>{state.state}</td>
                                     </tr>
