@@ -25,15 +25,13 @@ class App extends React.Component {
                             <Route exact path="/deposit/" component={Deposit}/>
                             <Route exact path="/withdraw/" component={Withdraw}/>
 
-                            <Route path="/deposit/:transactionId/"
-                                   component={DepositStatus}/>
-
                             <Route path="/:slug/how-to/"
                                    component={props => <Page {...props} wrapped='true'/>}/>
                             <Route path="/:slug/"
                                    component={props => <Page {...props} wrapped='false' />} />
 
-
+                            <Route path="/deposit/:transactionId/"
+                                   component={DepositStatus}/>
                         </Switch>
                     </div>
                     <Footer/>
