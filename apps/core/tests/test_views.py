@@ -121,7 +121,7 @@ class DepositStatusApiViewTest(TestCase):
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
-        transaction.state = TransactionStates.IN_PROGRESS
+        transaction.state = TransactionStates.UNCONFIRMED
         transaction.save()
         request = self.factory.get('')
         response = DepositStatusApiView.as_view()(request, transaction.id)

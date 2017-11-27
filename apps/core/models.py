@@ -28,25 +28,49 @@ class Page(models.Model):
 
 class TransactionStates(object):
     INITIATED = 1
-    IN_PROGRESS = 2
-    COMPLETED = 3
-    NOT_PROCESSED = 4
-    FAILED = 5
+    UNCONFIRMED = 2
+    CONFIRMED = 3
+    PROCESSED = 4
+    OVERDUE = 5
+    FAILED = 6
 
+
+class DepositTransactionStates(TransactionStates):
     STATE_CHOICES = (
-        (INITIATED, 'Initiated'),
-        (IN_PROGRESS, 'In progress'),
-        (COMPLETED, 'Completed'),
-        (NOT_PROCESSED, 'Not processed'),
-        (FAILED, 'Failed'),
+        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.UNCONFIRMED,
+            'Received an incoming transaction (hash - '
+            '{incoming_dash_transaction_hash}). Waiting for '
+            '{confirmations_number} confirmations',
+        ),
+        (
+            TransactionStates.CONFIRMED,
+            'Confirmed the incoming transaction (hash - '
+            '{incoming_dash_transaction_hash}). Initiated an outgoing one',
+        ),
+        (
+            TransactionStates.PROCESSED,
+            'Transaction is processed. Hash of a Ripple transaction is '
+            '{outgoing_ripple_transaction_hash}',
+        ),
+        (
+            TransactionStates.OVERDUE,
+            'Received 0 Dash transactions. Transactions to the address '
+            '{dash_address} are no longer tracked',
+        ),
+        (
+            TransactionStates.FAILED,
+            'Transaction failed. Please contact our support team',
+        ),
     )
 
 
 class Transaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     state = FSMIntegerField(
-        default=TransactionStates.INITIATED,
-        choices=TransactionStates.STATE_CHOICES,
+        default=DepositTransactionStates.INITIATED,
+        choices=DepositTransactionStates.STATE_CHOICES,
     )
 
     class Meta:
@@ -91,9 +115,6 @@ class DepositTransaction(Transaction):
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
-    current_state = models.PositiveSmallIntegerField(
-        choices=TransactionStates.STATE_CHOICES,
-    )
 
     class Meta:
         abstract = True
@@ -103,6 +124,9 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
     transaction = models.ForeignKey(
         DepositTransaction,
         related_name='state_changes',
+    )
+    current_state = models.PositiveSmallIntegerField(
+        choices=DepositTransactionStates.STATE_CHOICES,
     )
 
 
