@@ -5,6 +5,7 @@ import uuid
 
 from django_fsm import FSMIntegerField
 
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import formats
@@ -79,7 +80,10 @@ class Transaction(models.Model):
     def get_state_history(self):
         return [
             {
-                'state': state.get_current_state_display(),
+                'state': state.get_current_state_display().format(
+                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    **self.__dict__
+                ),
                 'timestamp': formats.date_format(
                     state.datetime,
                     'DATETIME_FORMAT',

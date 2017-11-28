@@ -4,6 +4,7 @@ import json
 
 from mock import patch
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse
@@ -130,7 +131,10 @@ class DepositStatusApiViewTest(TestCase):
                 'transactionId': transaction.id,
                 'rippleAddress': transaction.ripple_address,
                 'dashAddress': transaction.dash_address,
-                'state': transaction.get_state_display(),
+                'state': transaction.get_state_display().format(
+                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    **transaction.__dict__
+                ),
                 'stateHistory': transaction.get_state_history(),
             },
             cls=DjangoJSONEncoder,

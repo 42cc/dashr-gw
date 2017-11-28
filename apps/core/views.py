@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormMixin
@@ -84,7 +85,10 @@ class DepositStatusApiView(View):
                 'transactionId': transaction.id,
                 'rippleAddress': transaction.ripple_address,
                 'dashAddress': transaction.dash_address,
-                'state': transaction.get_state_display(),
+                'state': transaction.get_state_display().format(
+                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    **transaction.__dict__
+                ),
                 'stateHistory': transaction.get_state_history(),
             }
         )
