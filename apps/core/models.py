@@ -94,7 +94,6 @@ class DepositTransaction(Transaction):
         validators=[ripple_address_validator],
     )
     dash_address = models.CharField(max_length=35)
-    proceeded = models.BooleanField(default=False)
 
     def __str__(self):
         return 'Deposit {}'.format(self.id)
