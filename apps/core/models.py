@@ -95,6 +95,15 @@ class DepositTransaction(Transaction):
     )
     dash_address = models.CharField(max_length=35)
 
+    incoming_dash_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+    outgoing_ripple_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+
     def __str__(self):
         return 'Deposit {}'.format(self.id)
 
