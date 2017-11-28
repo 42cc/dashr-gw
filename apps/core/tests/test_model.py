@@ -81,13 +81,6 @@ class DepositModelTest(TestCase):
         self.assertTrue(hasattr(self.transaction, 'dash_address'))
         self.assertIsInstance(self.transaction.dash_address, unicode)
 
-    def test_has_proceeded(self):
-        self.assertTrue(hasattr(self.transaction, 'proceeded'))
-        self.assertIsInstance(self.transaction.proceeded, bool)
-
-    def test_default_proceeded_is_false(self):
-        self.assertFalse(self.transaction.proceeded)
-
     def test_dash_address_is_automatically_set(self):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
 

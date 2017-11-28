@@ -84,7 +84,6 @@ class DepositStatusApiView(View):
                 'transactionId': transaction.id,
                 'rippleAddress': transaction.ripple_address,
                 'dashAddress': transaction.dash_address,
-                'proceeded': transaction.proceeded,
                 'state': transaction.get_state_display(),
                 'stateHistory': transaction.get_state_history(),
             }
