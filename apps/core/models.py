@@ -41,14 +41,13 @@ class DepositTransactionStates(TransactionStates):
         (TransactionStates.INITIATED, 'Initiated'),
         (
             TransactionStates.UNCONFIRMED,
-            'Received an incoming transaction (hash - '
-            '{incoming_dash_transaction_hash}). Waiting for '
-            '{confirmations_number} confirmations',
+            'Received an incoming transaction ({dash_to_transfer} DASH). '
+            'Waiting for {confirmations_number} confirmations',
         ),
         (
             TransactionStates.CONFIRMED,
-            'Confirmed the incoming transaction (hash - '
-            '{incoming_dash_transaction_hash}). Initiated an outgoing one',
+            'Confirmed the incoming transaction ({dash_to_transfer} DASH). '
+            'Initiated an outgoing one',
         ),
         (
             TransactionStates.PROCESSED,
@@ -99,9 +98,11 @@ class DepositTransaction(Transaction):
     )
     dash_address = models.CharField(max_length=35)
 
-    incoming_dash_transaction_hash = models.CharField(
-        max_length=64,
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
         blank=True,
+        null=True,
     )
     outgoing_ripple_transaction_hash = models.CharField(
         max_length=64,
