@@ -42,6 +42,10 @@ try:
     RIPPLE_API_DATA = [
         {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
     ]
+
+    TRANSACTION_OVERDUE_MINUTES = int(
+        gateway_config.get('general', 'transaction_overdue_minutes'),
+    )
 except (configparser.NoOptionError, configparser.NoSectionError) as e:
     raise Exception(
         "Please add all needed credentials to 'gateway.cfg'. {}".format(e)
