@@ -20,7 +20,7 @@ def monitor_transactions_task(account):
     monitor_transactions(account)
 
 
-class CeleryDepositTransactionTask(celery.Task):
+class CeleryDepositTransactionBaseTask(celery.Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         transaction = models.DepositTransaction.objects.only('id').get(
             id=args[0],
@@ -29,8 +29,8 @@ class CeleryDepositTransactionTask(celery.Task):
         transaction.save()
 
 
-@celery_app.task(
-    base=CeleryDepositTransactionTask,
+celery_deposit_transaction_task = celery_app.task(
+    base=CeleryDepositTransactionBaseTask,
     # Retry if the system cannot connect to a Dash or DB server.
     autoretry_for=(socket.error, DatabaseError),
     retry_kwargs={
@@ -38,6 +38,9 @@ class CeleryDepositTransactionTask(celery.Task):
         'countdown': settings.TRANSACTION_OVERDUE_MINUTES,
     },
 )
+
+
+@celery_deposit_transaction_task
 def monitor_dash_to_ripple_transaction(transaction_id):
     logger.info('Deposit {}. Monitoring'.format(transaction_id))
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
@@ -71,6 +74,42 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         )
 
 
-@celery_app.task
+@celery_deposit_transaction_task
 def monitor_transaction_confirmations_number(transaction_id):
+    logger.info(
+        'Deposit {}. Monitoring number of confirmations'.format(
+            transaction_id,
+        ),
+    )
+    transaction = models.DepositTransaction.objects.get(id=transaction_id)
+
+    dash_wallet = wallet.DashWallet()
+    confirmed_balance = dash_wallet.get_address_balance(
+        transaction.dash_address,
+        settings.DASHD_MINIMAL_CONFIRMATIONS,
+    )
+
+    logger.info(
+        'Deposit {}. Confirmed balance - {}'.format(
+            transaction_id,
+            confirmed_balance,
+        ),
+    )
+
+    if transaction.dash_to_transfer <= confirmed_balance:
+        transaction.state = models.DepositTransactionStates.CONFIRMED
+        transaction.save(update_fields=('state',))
+        logger.info('Deposit {}. Confirmed'.format(transaction_id))
+        send_ripple_transaction.delay(transaction_id)
+        return
+
+    raise monitor_transaction_confirmations_number.retry(
+        (transaction_id,),
+        countdown=60,
+        max_retries=60,
+    )
+
+
+@celery_deposit_transaction_task
+def send_ripple_transaction(transaction_id):
     pass

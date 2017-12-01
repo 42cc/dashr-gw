@@ -11,7 +11,7 @@ from apps.core import models, tasks
 from gateway import celery_app
 
 
-class CeleryDepositTransactionTaskTest(TestCase):
+class CeleryDepositTransactionBaseTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def test_task_on_failure(self, patched_get_new_address):
         patched_get_new_address.return_value = (
@@ -20,7 +20,7 @@ class CeleryDepositTransactionTaskTest(TestCase):
         transaction = models.DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
-        task = tasks.CeleryDepositTransactionTask()
+        task = tasks.CeleryDepositTransactionBaseTask()
         task.on_failure(None, None, (transaction.id,), None, None)
         transaction.refresh_from_db()
         self.assertEqual(
@@ -132,4 +132,59 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
     ):
         patched_get_address_balance.side_effect = socket.error
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        patched_retry.assert_called_once()
+
+
+class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def setUp(self, patched_get_new_address):
+        celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        patched_get_new_address.return_value = (
+            'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        )
+        self.transaction = models.DepositTransaction.objects.create(
+            ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+        )
+
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_marks_transaction_as_confirmed_if_confirmed_balance_positive(
+        self,
+        patched_get_address_balance,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
+        self.transaction.refresh_from_db()
+        self.assertEqual(
+            self.transaction.state,
+            models.DepositTransactionStates.CONFIRMED,
+        )
+
+    @patch('apps.core.tasks.send_ripple_transaction.delay')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_launches_send_ripple_transaction_if_confirmed_balance_positive(
+        self,
+        patched_get_address_balance,
+        patched_send_ripple_transaction_task_delay,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
+        patched_send_ripple_transaction_task_delay.assert_called_once()
+
+    @patch('apps.core.tasks.monitor_transaction_confirmations_number.retry')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_retries_if_confirmed_balance_is_not_positive(
+        self,
+        patched_get_address_balance,
+        patched_retry,
+    ):
+        self.transaction.dash_to_transfer = 1
+        self.transaction.save()
+        patched_get_address_balance.return_value = 0
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
         patched_retry.assert_called_once()
