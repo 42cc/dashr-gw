@@ -87,6 +87,7 @@ class DepositStatusApiView(View):
                 'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),

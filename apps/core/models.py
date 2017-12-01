@@ -34,6 +34,7 @@ class TransactionStates(object):
     PROCESSED = 4
     OVERDUE = 5
     FAILED = 6
+    NO_RIPPLE_TRUST = 7
 
 
 class DepositTransactionStates(TransactionStates):
@@ -56,12 +57,17 @@ class DepositTransactionStates(TransactionStates):
         ),
         (
             TransactionStates.OVERDUE,
-            'Received 0 Dash transactions. Transactions to the address '
+            '`Received 0 Dash transactions. Transactions to the address '
             '{dash_address} are no longer tracked',
         ),
         (
             TransactionStates.FAILED,
             'Transaction failed. Please contact our support team',
+        ),
+        (
+            TransactionStates.NO_RIPPLE_TRUST,
+            'The ripple account {ripple_address} does not trust our gateway. '
+            'Please set a trust line to {gateway_ripple_address}',
         ),
     )
 
@@ -81,6 +87,7 @@ class Transaction(models.Model):
             {
                 'state': state.get_current_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
                     **self.__dict__
                 ),
                 'timestamp': formats.date_format(
