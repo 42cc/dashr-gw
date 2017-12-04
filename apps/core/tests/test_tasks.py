@@ -70,14 +70,11 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_get_address_balance,
     ):
         patched_get_address_balance.return_value = 0
-        initial_state = self.transaction.state_changes.get(
-            current_state=models.DepositTransactionStates.INITIATED,
-        )
-        initial_state.datetime = (
-            initial_state.datetime -
+        self.transaction.timestamp = (
+            self.transaction.timestamp -
             timedelta(settings.TRANSACTION_OVERDUE_MINUTES + 1)
         )
-        initial_state.save()
+        self.transaction.save()
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
         self.assertEqual(

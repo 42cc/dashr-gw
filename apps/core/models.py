@@ -74,6 +74,7 @@ class DepositTransactionStates(TransactionStates):
 
 class Transaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
     state = FSMIntegerField(
         default=DepositTransactionStates.INITIATED,
         choices=DepositTransactionStates.STATE_CHOICES,
@@ -85,11 +86,7 @@ class Transaction(models.Model):
     def get_state_history(self):
         return [
             {
-                'state': state.get_current_state_display().format(
-                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
-                    **self.__dict__
-                ),
+                'state': state.current_state,
                 'timestamp': formats.date_format(
                     state.datetime,
                     'DATETIME_FORMAT',
@@ -129,7 +126,11 @@ class DepositTransaction(Transaction):
     def post_save_signal_handler(instance, **kwargs):
         DepositTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.state,
+            current_state=instance.get_state_display().format(
+                confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                **instance.__dict__
+            ),
         )
 
 
@@ -145,9 +146,7 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
         DepositTransaction,
         related_name='state_changes',
     )
-    current_state = models.PositiveSmallIntegerField(
-        choices=DepositTransactionStates.STATE_CHOICES,
-    )
+    current_state = models.CharField(max_length=500)
 
 
 post_save.connect(

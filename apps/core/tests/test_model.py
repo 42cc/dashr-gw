@@ -96,29 +96,23 @@ class DepositModelTest(TestCase):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
         patched_get_new_address.assert_not_called()
 
-    @patch('apps.core.models.DashWallet.get_new_address')
-    def test_state_change_instance_is_created_after_save(
-        self,
-        patched_get_new_address,
-    ):
-        self.transaction.save()
+    def test_state_change_instance_is_created_after_save(self):
         last_state_change = DepositTransactionStateChange.objects.last()
         self.assertIsNotNone(last_state_change)
         self.assertEqual(last_state_change.transaction_id, self.transaction.id)
         self.assertEqual(
             last_state_change.current_state,
-            self.transaction.state,
+            self.transaction.get_state_display(),
         )
 
-    @patch('apps.core.models.DashWallet.get_new_address')
-    def test_get_state_history(self, patched_get_new_address):
+    def test_get_state_history(self):
         self.transaction.save()
         state_changes = DepositTransactionStateChange.objects.order_by(
             'datetime',
         ).filter(transaction=self.transaction)
         expected_history = [
             {
-                'state': state.get_current_state_display(),
+                'state': state.current_state,
                 'timestamp': formats.date_format(
                     state.datetime,
                     'DATETIME_FORMAT',

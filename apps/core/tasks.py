@@ -61,9 +61,7 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         return
 
     # If transaction is overdue.
-    if transaction.state_changes.only('datetime').get(
-        current_state=models.DepositTransactionStates.INITIATED,
-    ).datetime + timedelta(
+    if transaction.timestamp + timedelta(
         settings.TRANSACTION_OVERDUE_MINUTES,
     ) < now():
         transaction.state = models.DepositTransactionStates.OVERDUE
