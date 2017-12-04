@@ -28,7 +28,7 @@ class CeleryDepositTransactionBaseTask(celery.Task):
         transaction = models.DepositTransaction.objects.only('id').get(
             id=args[0],
         )
-        transaction.state = models.DepositTransactionStates.FAILED
+        transaction.state = transaction.FAILED
         transaction.save()
 
 
@@ -53,7 +53,7 @@ def monitor_dash_to_ripple_transaction(transaction_id):
     logger.info('Deposit {}. Balance {}'.format(transaction_id, balance))
 
     if balance > 0:
-        transaction.state = models.DepositTransactionStates.UNCONFIRMED
+        transaction.state = transaction.UNCONFIRMED
         transaction.dash_to_transfer = balance
         transaction.save()
         logger.info('Deposit {}. Became unconfirmed'.format(transaction_id))
@@ -64,7 +64,7 @@ def monitor_dash_to_ripple_transaction(transaction_id):
     if transaction.timestamp + timedelta(
         settings.TRANSACTION_OVERDUE_MINUTES,
     ) < now():
-        transaction.state = models.DepositTransactionStates.OVERDUE
+        transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Became overdue')
     else:
@@ -98,7 +98,7 @@ def monitor_transaction_confirmations_number(transaction_id):
     )
 
     if transaction.dash_to_transfer <= confirmed_balance:
-        transaction.state = models.DepositTransactionStates.CONFIRMED
+        transaction.state = transaction.CONFIRMED
         transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Confirmed'.format(transaction_id))
         send_ripple_transaction.delay(transaction_id)
@@ -137,7 +137,7 @@ def send_ripple_transaction(transaction_id):
             'Deposit {}. Ripple account does not trust '
             '(should trust {})'.format(transaction_id, minimal_trust_limit),
         )
-        dash_transaction.state = models.TransactionStates.NO_RIPPLE_TRUST
+        dash_transaction.state = dash_transaction.NO_RIPPLE_TRUST
         dash_transaction.save()
         raise send_ripple_transaction.retry(
             (transaction_id,),
@@ -161,7 +161,7 @@ def send_ripple_transaction(transaction_id):
                 new_ripple_transaction.id,
             ),
         )
-        dash_transaction.state = models.TransactionStates.FAILED
+        dash_transaction.state = dash_transaction.FAILED
         dash_transaction.save()
         return
 
@@ -174,7 +174,7 @@ def send_ripple_transaction(transaction_id):
                 new_ripple_transaction.id,
             ),
         )
-        dash_transaction.state = models.TransactionStates.FAILED
+        dash_transaction.state = dash_transaction.FAILED
         dash_transaction.save()
         return
 
@@ -184,7 +184,7 @@ def send_ripple_transaction(transaction_id):
             new_ripple_transaction.hash,
         ),
     )
-    dash_transaction.state = models.TransactionStates.PROCESSED
+    dash_transaction.state = dash_transaction.PROCESSED
     dash_transaction.outgoing_ripple_transaction_hash = (
         new_ripple_transaction.hash
     )

@@ -37,7 +37,26 @@ class TransactionStates(object):
     NO_RIPPLE_TRUST = 7
 
 
-class DepositTransactionStates(TransactionStates):
+class Transaction(models.Model, TransactionStates):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+    def get_state_history(self):
+        return [
+            {
+                'state': state.current_state,
+                'timestamp': formats.date_format(
+                    state.datetime,
+                    'DATETIME_FORMAT',
+                ),
+            } for state in self.state_changes.order_by('datetime').all()
+        ]
+
+
+class DepositTransaction(Transaction):
     STATE_CHOICES = (
         (TransactionStates.INITIATED, 'Initiated'),
         (
@@ -71,31 +90,10 @@ class DepositTransactionStates(TransactionStates):
         ),
     )
 
-
-class Transaction(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    timestamp = models.DateTimeField(auto_now_add=True)
     state = FSMIntegerField(
-        default=DepositTransactionStates.INITIATED,
-        choices=DepositTransactionStates.STATE_CHOICES,
+        default=TransactionStates.INITIATED,
+        choices=STATE_CHOICES,
     )
-
-    class Meta:
-        abstract = True
-
-    def get_state_history(self):
-        return [
-            {
-                'state': state.current_state,
-                'timestamp': formats.date_format(
-                    state.datetime,
-                    'DATETIME_FORMAT',
-                ),
-            } for state in self.state_changes.order_by('datetime').all()
-        ]
-
-
-class DepositTransaction(Transaction):
     ripple_address = models.CharField(
         max_length=35,
         validators=[ripple_address_validator],

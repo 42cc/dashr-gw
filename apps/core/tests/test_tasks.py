@@ -23,10 +23,7 @@ class CeleryDepositTransactionBaseTaskTest(TestCase):
         task = tasks.CeleryDepositTransactionBaseTask()
         task.on_failure(None, None, (transaction.id,), None, None)
         transaction.refresh_from_db()
-        self.assertEqual(
-            transaction.state,
-            models.DepositTransactionStates.FAILED,
-        )
+        self.assertEqual(transaction.state, transaction.FAILED)
 
 
 class MonitorDashToRippleTransactionTaskTest(TestCase):
@@ -48,10 +45,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_get_address_balance.return_value = 1
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.DepositTransactionStates.UNCONFIRMED,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.UNCONFIRMED)
 
     @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
     @patch('apps.core.models.DashWallet.get_address_balance')
@@ -77,10 +71,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         self.transaction.save()
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.DepositTransactionStates.OVERDUE,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.OVERDUE)
 
     @patch('apps.core.models.DashWallet.get_address_balance')
     def test_makes_transaction_as_overdue_if_time_not_exceeded(
@@ -90,10 +81,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_get_address_balance.return_value = 0
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
-        self.assertNotEqual(
-            self.transaction.state,
-            models.DepositTransactionStates.OVERDUE,
-        )
+        self.assertNotEqual(self.transaction.state, self.transaction.OVERDUE)
 
     @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
     @patch('apps.core.models.DashWallet.get_address_balance')
@@ -153,10 +141,7 @@ class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
             (self.transaction.id,),
         )
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.DepositTransactionStates.CONFIRMED,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
 
     @patch('apps.core.tasks.send_ripple_transaction.delay')
     @patch('apps.core.models.DashWallet.get_address_balance')
@@ -235,10 +220,7 @@ class SendRippleTransactionTaskTest(TestCase):
         patched_sign_task.assert_called_once()
         patched_submit_task.assert_called_once()
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.TransactionStates.PROCESSED,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.PROCESSED)
 
     @patch('apps.core.tasks.send_ripple_transaction.retry')
     @patch('apps.core.tasks.is_trust_set')
@@ -272,10 +254,7 @@ class SendRippleTransactionTaskTest(TestCase):
         )
         tasks.send_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.TransactionStates.FAILED,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.FAILED)
 
     @patch('apps.core.tasks.is_trust_set')
     @patch('apps.core.tasks.get_ripple_balance')
@@ -302,7 +281,4 @@ class SendRippleTransactionTaskTest(TestCase):
         )
         tasks.send_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
-        self.assertEqual(
-            self.transaction.state,
-            models.TransactionStates.FAILED,
-        )
+        self.assertEqual(self.transaction.state, self.transaction.FAILED)

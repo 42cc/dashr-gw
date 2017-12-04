@@ -14,7 +14,6 @@ from apps.core.models import (
     DepositTransactionStateChange,
     Page,
     Transaction,
-    TransactionStates,
 )
 
 
@@ -53,11 +52,6 @@ class TransactionModelTest(TestCase):
         transaction = Transaction()
         self.assertTrue(hasattr(transaction, 'id'))
         self.assertIsInstance(transaction.id, uuid.UUID)
-
-    def test_has_fsm_state_field(self):
-        transaction = Transaction()
-        self.assertTrue(hasattr(transaction, 'state'))
-        self.assertEqual(transaction.state, TransactionStates.INITIATED)
 
 
 class DepositModelTest(TestCase):

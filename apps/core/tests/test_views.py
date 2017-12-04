@@ -11,7 +11,7 @@ from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import DepositTransaction, Page, TransactionStates
+from apps.core.models import DepositTransaction, Page
 from apps.core.views import DepositSubmitApiView, DepositStatusApiView
 
 
@@ -122,7 +122,7 @@ class DepositStatusApiViewTest(TestCase):
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
-        transaction.state = TransactionStates.UNCONFIRMED
+        transaction.state = transaction.UNCONFIRMED
         transaction.save()
         request = self.factory.get('')
         response = DepositStatusApiView.as_view()(request, transaction.id)
