@@ -124,8 +124,8 @@ def send_ripple_transaction(transaction_id):
     minimal_trust_limit = (
         dash_transaction.dash_to_transfer +
         get_ripple_balance(
-            settings.RIPPLE_ACCOUNT,
             dash_transaction.ripple_address,
+            settings.RIPPLE_ACCOUNT,
             'DSH',
         )
     )
