@@ -37,10 +37,12 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
 
+    @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
     @patch('apps.core.models.DashWallet.get_address_balance')
     def test_marks_transaction_as_unconfirmed_if_balance_positive(
         self,
         patched_get_address_balance,
+        patched_monitor_confirmations_number_task_delay,
     ):
         patched_get_address_balance.return_value = 1
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
@@ -131,10 +133,12 @@ class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
 
+    @patch('apps.core.tasks.send_ripple_transaction.delay')
     @patch('apps.core.models.DashWallet.get_address_balance')
     def test_marks_transaction_as_confirmed_if_confirmed_balance_positive(
         self,
         patched_get_address_balance,
+        patched_send_ripple_transaction_task_delay,
     ):
         patched_get_address_balance.return_value = 1
         tasks.monitor_transaction_confirmations_number.apply(
