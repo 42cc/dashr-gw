@@ -8,6 +8,8 @@ from django.views.generic.edit import FormMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .forms import DepositTransactionModelForm
 from .models import Page, DepositTransaction
@@ -38,6 +40,10 @@ class GetPageDetailsView(View):
 
             return JsonResponse(ctx, safe=False)
         return render(request, 'base.html')
+
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
 class DepositSubmitApiView(View, FormMixin):
