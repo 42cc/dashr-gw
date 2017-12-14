@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 
 import uuid
 
-from django_fsm import FSMIntegerField
-
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import formats
@@ -28,26 +27,17 @@ class Page(models.Model):
 
 class TransactionStates(object):
     INITIATED = 1
-    IN_PROGRESS = 2
-    COMPLETED = 3
-    NOT_PROCESSED = 4
-    FAILED = 5
-
-    STATE_CHOICES = (
-        (INITIATED, 'Initiated'),
-        (IN_PROGRESS, 'In progress'),
-        (COMPLETED, 'Completed'),
-        (NOT_PROCESSED, 'Not processed'),
-        (FAILED, 'Failed'),
-    )
+    UNCONFIRMED = 2
+    CONFIRMED = 3
+    PROCESSED = 4
+    OVERDUE = 5
+    FAILED = 6
+    NO_RIPPLE_TRUST = 7
 
 
-class Transaction(models.Model):
+class Transaction(models.Model, TransactionStates):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    state = FSMIntegerField(
-        default=TransactionStates.INITIATED,
-        choices=TransactionStates.STATE_CHOICES,
-    )
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         abstract = True
@@ -55,7 +45,7 @@ class Transaction(models.Model):
     def get_state_history(self):
         return [
             {
-                'state': state.get_current_state_display(),
+                'state': state.current_state,
                 'timestamp': formats.date_format(
                     state.datetime,
                     'DATETIME_FORMAT',
@@ -65,12 +55,59 @@ class Transaction(models.Model):
 
 
 class DepositTransaction(Transaction):
+    STATE_CHOICES = (
+        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.UNCONFIRMED,
+            'Received an incoming transaction ({dash_to_transfer} DASH). '
+            'Waiting for {confirmations_number} confirmations',
+        ),
+        (
+            TransactionStates.CONFIRMED,
+            'Confirmed the incoming transaction ({dash_to_transfer} DASH). '
+            'Initiated an outgoing one',
+        ),
+        (
+            TransactionStates.PROCESSED,
+            'Transaction is processed. Hash of a Ripple transaction is '
+            '{outgoing_ripple_transaction_hash}',
+        ),
+        (
+            TransactionStates.OVERDUE,
+            '`Received 0 Dash transactions. Transactions to the address '
+            '{dash_address} are no longer tracked',
+        ),
+        (
+            TransactionStates.FAILED,
+            'Transaction failed. Please contact our support team',
+        ),
+        (
+            TransactionStates.NO_RIPPLE_TRUST,
+            'The ripple account {ripple_address} does not trust our gateway. '
+            'Please set a trust line to {gateway_ripple_address}',
+        ),
+    )
+
+    state = models.PositiveSmallIntegerField(
+        default=TransactionStates.INITIATED,
+        choices=STATE_CHOICES,
+    )
     ripple_address = models.CharField(
         max_length=35,
         validators=[ripple_address_validator],
     )
     dash_address = models.CharField(max_length=35)
-    proceeded = models.BooleanField(default=False)
+
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    outgoing_ripple_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
 
     def __str__(self):
         return 'Deposit {}'.format(self.id)
@@ -85,15 +122,16 @@ class DepositTransaction(Transaction):
     def post_save_signal_handler(instance, **kwargs):
         DepositTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.state,
+            current_state=instance.get_state_display().format(
+                confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                **instance.__dict__
+            ),
         )
 
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
-    current_state = models.PositiveSmallIntegerField(
-        choices=TransactionStates.STATE_CHOICES,
-    )
 
     class Meta:
         abstract = True
@@ -104,6 +142,7 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
         DepositTransaction,
         related_name='state_changes',
     )
+    current_state = models.CharField(max_length=500)
 
 
 post_save.connect(

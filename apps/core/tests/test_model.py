@@ -14,7 +14,6 @@ from apps.core.models import (
     DepositTransactionStateChange,
     Page,
     Transaction,
-    TransactionStates,
 )
 
 
@@ -54,11 +53,6 @@ class TransactionModelTest(TestCase):
         self.assertTrue(hasattr(transaction, 'id'))
         self.assertIsInstance(transaction.id, uuid.UUID)
 
-    def test_has_fsm_state_field(self):
-        transaction = Transaction()
-        self.assertTrue(hasattr(transaction, 'state'))
-        self.assertEqual(transaction.state, TransactionStates.INITIATED)
-
 
 class DepositModelTest(TestCase):
     @classmethod
@@ -81,13 +75,6 @@ class DepositModelTest(TestCase):
         self.assertTrue(hasattr(self.transaction, 'dash_address'))
         self.assertIsInstance(self.transaction.dash_address, unicode)
 
-    def test_has_proceeded(self):
-        self.assertTrue(hasattr(self.transaction, 'proceeded'))
-        self.assertIsInstance(self.transaction.proceeded, bool)
-
-    def test_default_proceeded_is_false(self):
-        self.assertFalse(self.transaction.proceeded)
-
     def test_dash_address_is_automatically_set(self):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
 
@@ -103,29 +90,23 @@ class DepositModelTest(TestCase):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
         patched_get_new_address.assert_not_called()
 
-    @patch('apps.core.models.DashWallet.get_new_address')
-    def test_state_change_instance_is_created_after_save(
-        self,
-        patched_get_new_address,
-    ):
-        self.transaction.save()
+    def test_state_change_instance_is_created_after_save(self):
         last_state_change = DepositTransactionStateChange.objects.last()
         self.assertIsNotNone(last_state_change)
         self.assertEqual(last_state_change.transaction_id, self.transaction.id)
         self.assertEqual(
             last_state_change.current_state,
-            self.transaction.state,
+            self.transaction.get_state_display(),
         )
 
-    @patch('apps.core.models.DashWallet.get_new_address')
-    def test_get_state_history(self, patched_get_new_address):
+    def test_get_state_history(self):
         self.transaction.save()
         state_changes = DepositTransactionStateChange.objects.order_by(
             'datetime',
         ).filter(transaction=self.transaction)
         expected_history = [
             {
-                'state': state.get_current_state_display(),
+                'state': state.current_state,
                 'timestamp': formats.date_format(
                     state.datetime,
                     'DATETIME_FORMAT',

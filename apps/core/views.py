@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .forms import DepositTransactionModelForm
 from .models import Page, DepositTransaction
@@ -37,6 +40,10 @@ class GetPageDetailsView(View):
 
             return JsonResponse(ctx, safe=False)
         return render(request, 'base.html')
+
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
 class DepositSubmitApiView(View, FormMixin):
@@ -84,8 +91,11 @@ class DepositStatusApiView(View):
                 'transactionId': transaction.id,
                 'rippleAddress': transaction.ripple_address,
                 'dashAddress': transaction.dash_address,
-                'proceeded': transaction.proceeded,
-                'state': transaction.get_state_display(),
+                'state': transaction.get_state_display().format(
+                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    **transaction.__dict__
+                ),
                 'stateHistory': transaction.get_state_history(),
             }
         )

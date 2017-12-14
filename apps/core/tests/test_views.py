@@ -4,13 +4,14 @@ import json
 
 from mock import patch
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import DepositTransaction, Page, TransactionStates
+from apps.core.models import DepositTransaction, Page
 from apps.core.views import DepositSubmitApiView, DepositStatusApiView
 
 
@@ -121,7 +122,7 @@ class DepositStatusApiViewTest(TestCase):
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
-        transaction.state = TransactionStates.IN_PROGRESS
+        transaction.state = transaction.UNCONFIRMED
         transaction.save()
         request = self.factory.get('')
         response = DepositStatusApiView.as_view()(request, transaction.id)
@@ -130,8 +131,11 @@ class DepositStatusApiViewTest(TestCase):
                 'transactionId': transaction.id,
                 'rippleAddress': transaction.ripple_address,
                 'dashAddress': transaction.dash_address,
-                'proceeded': transaction.proceeded,
-                'state': transaction.get_state_display(),
+                'state': transaction.get_state_display().format(
+                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
+                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    **transaction.__dict__
+                ),
                 'stateHistory': transaction.get_state_history(),
             },
             cls=DjangoJSONEncoder,

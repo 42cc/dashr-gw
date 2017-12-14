@@ -26,10 +26,10 @@ class DashWallet(object):
             settings.DASHD_MINIMAL_CONFIRMATIONS,
         )
 
-    def get_address_balance(self, address):
+    def get_address_balance(self, address, min_confirmations=1):
         return self._rpc_connection.getreceivedbyaddress(
             address,
-            settings.DASHD_MINIMAL_CONFIRMATIONS,
+            min_confirmations,
         )
 
     def get_new_address(self):
