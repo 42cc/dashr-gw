@@ -13,7 +13,7 @@ export default class Header extends React.Component {
 
     render() {
         return (
-            <Navbar collapseOnSelect>
+            <Navbar collapseOnSelect fixedTop>
                 <Navbar.Header>
                     <Navbar.Brand>
                         <LinkContainer to="/">
