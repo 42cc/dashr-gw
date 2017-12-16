@@ -3,6 +3,9 @@ from __future__ import unicode_literals
 
 import uuid
 
+from encrypted_fields import EncryptedCharField
+from solo.models import SingletonModel
+
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -11,6 +14,21 @@ from django.utils.translation import ugettext as _
 
 from apps.core.validators import ripple_address_validator
 from apps.core.wallet import DashWallet
+
+
+class RippleWalletCredentials(SingletonModel):
+    address = models.CharField(
+        max_length=35,
+        validators=[ripple_address_validator],
+        verbose_name='Address',
+    )
+    secret = EncryptedCharField(max_length=29, verbose_name='Secret key')
+
+    def __str__(self):
+        return 'Ripple Wallet Credentials'
+
+    class Meta:
+        verbose_name = 'Ripple Wallet Credentials'
 
 
 class Page(models.Model):

@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 
 import uuid
 
+from encrypted_fields import EncryptedCharField
 from mock import patch
+from solo.models import SingletonModel
 
 from django.test import TestCase
 from django.db import IntegrityError
@@ -12,6 +14,7 @@ from django.utils import formats
 from apps.core.models import (
     DepositTransaction,
     DepositTransactionStateChange,
+    RippleWalletCredentials,
     Page,
     Transaction,
 )
@@ -118,3 +121,25 @@ class DepositModelTest(TestCase):
             expected_history,
         )
 
+
+class RippleWalletCredentialsModelTest(TestCase):
+    def test_is_singelton(self):
+        self.assertTrue(issubclass(RippleWalletCredentials, SingletonModel))
+
+    def test_has_address(self):
+        self.assertTrue(hasattr(RippleWalletCredentials, 'address'))
+        self.assertIsInstance(
+            RippleWalletCredentials.get_solo().address,
+            unicode,
+        )
+
+    def test_has_secret(self):
+        self.assertTrue(hasattr(RippleWalletCredentials, 'secret'))
+        self.assertIsInstance(
+            RippleWalletCredentials.get_solo().secret,
+            unicode,
+        )
+        self.assertIsInstance(
+            RippleWalletCredentials._meta.get_field('secret'),
+            EncryptedCharField,
+        )

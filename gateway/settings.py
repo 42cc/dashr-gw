@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'compressor',
     'webpack_loader',
     'ckeditor',
+    'solo',
 
     'apps.core',
 ]
@@ -256,6 +257,8 @@ LOGGING = {
         },
     }
 }
+
+ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'fieldkeys')
 
 # Try to load settings from ``settings_local.py`` file
 try:

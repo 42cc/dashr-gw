@@ -46,6 +46,10 @@ test: flake8
 pre-install:
 	-sudo apt-get install yui-compressor
 	sudo npm install -g less
+	mkdir fieldkeys
+	sudo apt-get install python-keyczar
+	keyczart create --location=fieldkeys --purpose=crypt
+	keyczart addkey --location=fieldkeys --status=primary --size=256
 
 install:
 	npm install

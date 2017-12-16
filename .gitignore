@@ -50,6 +50,7 @@ run/*
 celerybeat-schedule
 gateway/settings_local.py
 Makefile.def
+/fieldkeys/
 
 webpack-stats.json
 
