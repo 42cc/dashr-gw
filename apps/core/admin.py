@@ -7,7 +7,15 @@ from solo.admin import SingletonModelAdmin
 from django import forms
 from django.contrib import admin
 
-from .models import Page, RippleWalletCredentials
+from .models import (
+    DepositTransaction,
+    Page,
+    RippleWalletCredentials,
+    WithdrawalTransaction,
+)
+
+admin.site.register(DepositTransaction)
+admin.site.register(WithdrawalTransaction)
 
 
 class RippleWalletAdminForm(forms.ModelForm):
