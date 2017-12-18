@@ -37,12 +37,6 @@ try:
         gateway_config.get('dashd_credentials', 'minimal_confirmations'),
     )
 
-    RIPPLE_ACCOUNT = gateway_config.get('ripple_credentials', 'account')
-    RIPPLE_SECRET = gateway_config.get('ripple_credentials', 'secret')
-    RIPPLE_API_DATA = [
-        {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
-    ]
-
     TRANSACTION_OVERDUE_MINUTES = int(
         gateway_config.get('general', 'transaction_overdue_minutes'),
     )
@@ -54,6 +48,10 @@ except IOError:
     raise Exception(
         "Please make sure a configuration file 'gateway.cfg' exists"
     )
+
+RIPPLE_API_DATA = [
+    {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
+]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -9,6 +9,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gateway.settings')
 
 from django.conf import settings
 
+from apps.core.models import RippleWalletCredentials
+
 logging.basicConfig(
     filename=os.path.join(settings.BASE_DIR, 'transaction.log'),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -47,7 +49,11 @@ def create_transaction(dash_address):
             ),
         )
 
-    return settings.RIPPLE_ACCOUNT, cursor.lastrowid
+    ripple_address = RippleWalletCredentials.objects.only(
+        'address',
+    ).get().address
+
+    return ripple_address, cursor.lastrowid
 
 
 if __name__ == '__main__':

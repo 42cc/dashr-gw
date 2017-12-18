@@ -19,8 +19,11 @@ logger = logging.getLogger(__file__)
 
 
 @celery_app.task
-def monitor_transactions_task(account):
-    monitor_transactions(account)
+def monitor_transactions_task():
+    ripple_address = models.RippleWalletCredentials.objects.only(
+        'address',
+    ).get().address
+    monitor_transactions(ripple_address)
 
 
 class CeleryDepositTransactionBaseTask(celery.Task):
@@ -119,17 +122,19 @@ def send_ripple_transaction(transaction_id):
 
     dash_transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
+    ripple_credentials = models.RippleWalletCredentials.objects.get()
+
     minimal_trust_limit = (
         dash_transaction.dash_to_transfer +
         get_ripple_balance(
             dash_transaction.ripple_address,
-            settings.RIPPLE_ACCOUNT,
+            ripple_credentials.address,
             'DSH',
         )
     )
     if not is_trust_set(
         trusts=dash_transaction.ripple_address,
-        peer=settings.RIPPLE_ACCOUNT,
+        peer=ripple_credentials.address,
         currency='DSH',
         limit=minimal_trust_limit,
     ):
@@ -146,13 +151,13 @@ def send_ripple_transaction(transaction_id):
         )
 
     new_ripple_transaction = RippleTransaction.objects.create(
-        account=settings.RIPPLE_ACCOUNT,
+        account=ripple_credentials.address,
         destination=dash_transaction.ripple_address,
         currency='DSH',
         value='{0:f}'.format(dash_transaction.dash_to_transfer),
     )
 
-    sign_task(new_ripple_transaction.pk, settings.RIPPLE_SECRET)
+    sign_task(new_ripple_transaction.pk, ripple_credentials.secret)
     new_ripple_transaction.refresh_from_db()
     if new_ripple_transaction.status != new_ripple_transaction.PENDING:
         logger.error(

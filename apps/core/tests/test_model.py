@@ -63,6 +63,7 @@ class DepositModelTest(TestCase):
     def setUpTestData(cls, patched_get_new_address):
         cls.dash_address = 'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         patched_get_new_address.return_value = cls.dash_address
+        RippleWalletCredentials.get_solo()
         cls.transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
@@ -123,20 +124,23 @@ class DepositModelTest(TestCase):
 
 
 class RippleWalletCredentialsModelTest(TestCase):
+    def setUp(self):
+        RippleWalletCredentials.get_solo()
+
     def test_is_singelton(self):
         self.assertTrue(issubclass(RippleWalletCredentials, SingletonModel))
 
     def test_has_address(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'address'))
         self.assertIsInstance(
-            RippleWalletCredentials.get_solo().address,
+            RippleWalletCredentials.objects.get().address,
             unicode,
         )
 
     def test_has_secret(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'secret'))
         self.assertIsInstance(
-            RippleWalletCredentials.get_solo().secret,
+            RippleWalletCredentials.objects.get().secret,
             unicode,
         )
         self.assertIsInstance(

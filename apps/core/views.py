@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .forms import DepositTransactionModelForm
-from .models import Page, DepositTransaction
+from .models import Page, DepositTransaction, RippleWalletCredentials
 from .tasks import monitor_dash_to_ripple_transaction
 
 
@@ -86,6 +86,9 @@ class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
         transaction = get_object_or_404(DepositTransaction, id=transaction_id)
+        ripple_address = RippleWalletCredentials.objects.only(
+            'address',
+        ).get().address
         return JsonResponse(
             {
                 'transactionId': transaction.id,
@@ -93,7 +96,7 @@ class DepositStatusApiView(View):
                 'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    gateway_ripple_address=ripple_address,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),

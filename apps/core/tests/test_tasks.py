@@ -12,6 +12,9 @@ from gateway import celery_app
 
 
 class CeleryDepositTransactionBaseTaskTest(TestCase):
+    def setUp(self):
+        models.RippleWalletCredentials.get_solo()
+
     @patch('apps.core.models.DashWallet.get_new_address')
     def test_task_on_failure(self, patched_get_new_address):
         patched_get_new_address.return_value = (
@@ -30,6 +33,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        models.RippleWalletCredentials.get_solo()
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         )
@@ -126,6 +130,7 @@ class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        models.RippleWalletCredentials.get_solo()
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         )
@@ -179,7 +184,9 @@ class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
 class SendRippleTransactionTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
-        settings.RIPPLE_ACCOUNT = 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7'
+        models.RippleWalletCredentials.objects.create(
+            address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+        )
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'

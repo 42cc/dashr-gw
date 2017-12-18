@@ -11,7 +11,7 @@ from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import DepositTransaction, Page
+from apps.core.models import DepositTransaction, Page, RippleWalletCredentials
 from apps.core.views import DepositSubmitApiView, DepositStatusApiView
 
 
@@ -72,6 +72,9 @@ class DepositSubmitApiViewTest(TestCase):
     def setUpTestData(cls):
         cls.factory = RequestFactory()
 
+    def setUp(self):
+        RippleWalletCredentials.get_solo()
+
     @patch('apps.core.views.monitor_dash_to_ripple_transaction.apply_async')
     @patch('apps.core.models.DashWallet.get_new_address')
     def test_view_with_valid_form(
@@ -119,6 +122,7 @@ class DepositStatusApiViewTest(TestCase):
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         )
+        ripple_address = RippleWalletCredentials.get_solo().address
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
@@ -133,7 +137,7 @@ class DepositStatusApiViewTest(TestCase):
                 'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    gateway_ripple_address=ripple_address,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),
