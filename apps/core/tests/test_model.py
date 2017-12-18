@@ -16,7 +16,7 @@ from apps.core.models import (
     DepositTransactionStateChange,
     RippleWalletCredentials,
     Page,
-    Transaction,
+    BaseTransaction,
 )
 
 
@@ -47,12 +47,12 @@ class PageModelTest(TestCase):
             )
 
 
-class TransactionModelTest(TestCase):
+class BaseTransactionModelTest(TestCase):
     def test_transaction_model_abstract(self):
-        self.assertTrue(Transaction._meta.abstract)
+        self.assertTrue(BaseTransaction._meta.abstract)
 
     def test_transaction_has_uuid_primary_key(self):
-        transaction = Transaction()
+        transaction = BaseTransaction()
         self.assertTrue(hasattr(transaction, 'id'))
         self.assertIsInstance(transaction.id, uuid.UUID)
 
@@ -68,8 +68,8 @@ class DepositModelTest(TestCase):
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
 
-    def test_inherits_transaction_model(self):
-        self.assertTrue(issubclass(DepositTransaction, Transaction))
+    def test_inherits_base_transaction_model(self):
+        self.assertTrue(issubclass(DepositTransaction, BaseTransaction))
 
     def test_has_ripple_address(self):
         self.assertTrue(hasattr(self.transaction, 'ripple_address'))

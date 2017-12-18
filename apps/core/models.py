@@ -53,7 +53,7 @@ class TransactionStates(object):
     NO_RIPPLE_TRUST = 7
 
 
-class Transaction(models.Model, TransactionStates):
+class BaseTransaction(models.Model, TransactionStates):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -72,7 +72,7 @@ class Transaction(models.Model, TransactionStates):
         ]
 
 
-class DepositTransaction(Transaction):
+class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
         (TransactionStates.INITIATED, 'Initiated'),
         (
