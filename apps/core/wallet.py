@@ -36,3 +36,6 @@ class DashWallet(object):
 
     def send_to_address(self, address, amount):
         self._rpc_connection.sendtoaddress(address, amount)
+
+    def check_address_valid(self, address):
+        return self._rpc_connection.validateaddress(address)['isvalid']

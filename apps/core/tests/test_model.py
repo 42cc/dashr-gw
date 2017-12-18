@@ -48,13 +48,20 @@ class PageModelTest(TestCase):
 
 
 class BaseTransactionModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.transaction = BaseTransaction()
+
     def test_transaction_model_abstract(self):
-        self.assertTrue(BaseTransaction._meta.abstract)
+        self.assertTrue(self.transaction._meta.abstract)
 
     def test_transaction_has_uuid_primary_key(self):
-        transaction = BaseTransaction()
-        self.assertTrue(hasattr(transaction, 'id'))
-        self.assertIsInstance(transaction.id, uuid.UUID)
+        self.assertTrue(hasattr(self.transaction, 'id'))
+        self.assertIsInstance(self.transaction.id, uuid.UUID)
+
+    def test_has_dash_address(self):
+        self.assertTrue(hasattr(self.transaction, 'dash_address'))
+        self.assertIsInstance(self.transaction.dash_address, unicode)
 
 
 class DepositModelTest(TestCase):
@@ -74,10 +81,6 @@ class DepositModelTest(TestCase):
     def test_has_ripple_address(self):
         self.assertTrue(hasattr(self.transaction, 'ripple_address'))
         self.assertIsInstance(self.transaction.ripple_address, unicode)
-
-    def test_has_dash_address(self):
-        self.assertTrue(hasattr(self.transaction, 'dash_address'))
-        self.assertIsInstance(self.transaction.dash_address, unicode)
 
     def test_dash_address_is_automatically_set(self):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
@@ -121,6 +124,11 @@ class DepositModelTest(TestCase):
             self.transaction.get_state_history(),
             expected_history,
         )
+
+
+class WithdrawalModelTest(TestCase):
+    def test_inherits_base_transaction_model(self):
+        self.assertTrue(issubclass(DepositTransaction, BaseTransaction))
 
 
 class RippleWalletCredentialsModelTest(TestCase):

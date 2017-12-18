@@ -12,7 +12,10 @@ from django.db.models.signals import post_save
 from django.utils import formats
 from django.utils.translation import ugettext as _
 
-from apps.core.validators import ripple_address_validator
+from apps.core.validators import (
+    dash_address_validator,
+    ripple_address_validator,
+)
 from apps.core.wallet import DashWallet
 
 
@@ -56,6 +59,17 @@ class TransactionStates(object):
 class BaseTransaction(models.Model, TransactionStates):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    dash_address = models.CharField(
+        max_length=35,
+        validators=[dash_address_validator],
+    )
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         abstract = True
@@ -114,14 +128,7 @@ class DepositTransaction(BaseTransaction):
         max_length=35,
         validators=[ripple_address_validator],
     )
-    dash_address = models.CharField(max_length=35)
 
-    dash_to_transfer = models.DecimalField(
-        max_digits=16,
-        decimal_places=8,
-        blank=True,
-        null=True,
-    )
     outgoing_ripple_transaction_hash = models.CharField(
         max_length=64,
         blank=True,
@@ -149,6 +156,24 @@ class DepositTransaction(BaseTransaction):
                 **instance.__dict__
             ),
         )
+
+
+class WithdrawalTransaction(BaseTransaction):
+    state = models.PositiveSmallIntegerField(
+        default=TransactionStates.INITIATED,
+    )
+
+    incoming_ripple_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+    outgoing_dash_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+
+    def __str__(self):
+        return 'Withdrawal {}'.format(self.id)
 
 
 class BaseTransactionStateChange(models.Model):
