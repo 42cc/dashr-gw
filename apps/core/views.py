@@ -13,7 +13,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import Page, DepositTransaction, RippleWalletCredentials
-from .tasks import monitor_dash_to_ripple_transaction
+from .tasks import (
+    monitor_dash_to_ripple_transaction,
+    monitor_ripple_to_dash_transaction,
+)
 
 
 class IndexView(TemplateView):
@@ -82,6 +85,10 @@ class WithdrawalSubmitApiView(BaseFormView):
 
     def form_valid(self, form):
         transaction = form.save()
+        monitor_ripple_to_dash_transaction.apply_async(
+            (transaction.id,),
+            countdown=30,
+        )
         ripple_address = RippleWalletCredentials.objects.only(
             'address',
         ).get().address

@@ -194,3 +194,8 @@ def send_ripple_transaction(transaction_id):
         new_ripple_transaction.hash
     )
     dash_transaction.save()
+
+
+@celery_app.task
+def monitor_ripple_to_dash_transaction(transaction_id):
+    pass

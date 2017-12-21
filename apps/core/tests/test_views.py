@@ -124,14 +124,20 @@ class WithdrawalSubmitApiViewTest(TestCase):
     def setUp(self):
         RippleWalletCredentials.get_solo()
 
+    @patch('apps.core.views.monitor_ripple_to_dash_transaction.apply_async')
     @patch('apps.core.models.DashWallet.check_address_valid')
-    def test_view_with_valid_form(self, patched_check_address_valid):
+    def test_view_with_valid_form(
+        self,
+        patched_check_address_valid,
+        patched_monitor_task,
+    ):
         patched_check_address_valid.return_value = True
         request = self.factory.post(
             '',
             {'dash_address': 'yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9'},
         )
         response = WithdrawalSubmitApiView.as_view()(request)
+        patched_monitor_task.assert_called_once()
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
