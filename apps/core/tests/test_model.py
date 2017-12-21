@@ -17,6 +17,7 @@ from apps.core.models import (
     RippleWalletCredentials,
     Page,
     BaseTransaction,
+    WithdrawalTransaction,
 )
 
 
@@ -128,7 +129,12 @@ class DepositModelTest(TestCase):
 
 class WithdrawalModelTest(TestCase):
     def test_inherits_base_transaction_model(self):
-        self.assertTrue(issubclass(DepositTransaction, BaseTransaction))
+        self.assertTrue(issubclass(WithdrawalTransaction, BaseTransaction))
+
+    def test_has_destination_tag_property_equal_to_id(self):
+        transaction = WithdrawalTransaction()
+        self.assertTrue(hasattr(transaction, 'destination_tag'))
+        self.assertEqual(transaction.destination_tag, transaction.id)
 
 
 class RippleWalletCredentialsModelTest(TestCase):

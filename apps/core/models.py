@@ -182,6 +182,10 @@ class WithdrawalTransaction(BaseTransaction):
     def __str__(self):
         return 'Withdrawal {}'.format(self.id)
 
+    @property
+    def destination_tag(self):
+        return self.id
+
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
