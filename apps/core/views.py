@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import BaseFormView
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -46,15 +46,9 @@ class GetPageDetailsView(View):
         return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
-class DepositSubmitApiView(View, FormMixin):
+class DepositSubmitApiView(BaseFormView):
     form_class = DepositTransactionModelForm
-
-    def post(self, request):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+    http_method_names = ('post', 'put')
 
     def form_valid(self, form):
         transaction = form.save()
