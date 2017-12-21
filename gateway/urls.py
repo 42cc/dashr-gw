@@ -5,6 +5,7 @@ from apps.core.views import (
     DepositStatusApiView,
     GetPageDetailsView,
     IndexView,
+    WithdrawalSubmitApiView,
 )
 
 
@@ -14,6 +15,8 @@ urlpatterns = [
     url(r'^$', IndexView.as_view(), name='index'),
     url(r'^submit-deposit/$',
         DepositSubmitApiView.as_view(), name='submit-deposit'),
+    url(r'^submit-withdrawal/$',
+        WithdrawalSubmitApiView.as_view(), name='submit-withdrawal'),
     url(
             r'^deposit/'
             r'(?P<transaction_id>'

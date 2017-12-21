@@ -12,7 +12,11 @@ from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
 from apps.core.models import DepositTransaction, Page, RippleWalletCredentials
-from apps.core.views import DepositSubmitApiView, DepositStatusApiView
+from apps.core.views import (
+    DepositSubmitApiView,
+    WithdrawalSubmitApiView,
+    DepositStatusApiView,
+)
 
 
 class GetPageDetailsViewTest(TestCase):
@@ -109,6 +113,48 @@ class DepositSubmitApiViewTest(TestCase):
         self.assertEqual(
             response_content['ripple_address_error'],
             'The Ripple address is not valid.',
+        )
+
+
+class WithdrawalSubmitApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    def setUp(self):
+        RippleWalletCredentials.get_solo()
+
+    @patch('apps.core.models.DashWallet.check_address_valid')
+    def test_view_with_valid_form(self, patched_check_address_valid):
+        patched_check_address_valid.return_value = True
+        request = self.factory.post(
+            '',
+            {'dash_address': 'yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9'},
+        )
+        response = WithdrawalSubmitApiView.as_view()(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('ripple_address', response_content)
+        self.assertIn('destination_tag', response_content)
+        self.assertIn('status_url', response_content)
+        self.assertEqual(response_content['success'], True)
+
+    @patch('apps.core.models.DashWallet.check_address_valid')
+    def test_view_with_invalid_form(self, patched_check_address_valid):
+        patched_check_address_valid.return_value = False
+        request = self.factory.post('', {'dash_address': 'Invalid address'})
+        response = WithdrawalSubmitApiView.as_view()(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('dash_address_error', response_content)
+        self.assertEqual(response_content['success'], False)
+        self.assertEqual(
+            response_content['dash_address_error'],
+            'The Dash address is not valid',
         )
 
 

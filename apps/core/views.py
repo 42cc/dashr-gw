@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .forms import DepositTransactionModelForm
+from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import Page, DepositTransaction, RippleWalletCredentials
 from .tasks import monitor_dash_to_ripple_transaction
 
@@ -72,6 +72,33 @@ class DepositSubmitApiView(BaseFormView):
             {
                 'success': False,
                 'ripple_address_error': form.errors['ripple_address'][0],
+            },
+        )
+
+
+class WithdrawalSubmitApiView(BaseFormView):
+    form_class = WithdrawalTransactionModelForm
+    http_method_names = ('post', 'put')
+
+    def form_valid(self, form):
+        transaction = form.save()
+        ripple_address = RippleWalletCredentials.objects.only(
+            'address',
+        ).get().address
+        return JsonResponse(
+            {
+                'success': True,
+                'ripple_address': ripple_address,
+                'status_url': '/status',
+                'destination_tag': transaction.destination_tag,
+            },
+        )
+
+    def form_invalid(self, form):
+        return JsonResponse(
+            {
+                'success': False,
+                'dash_address_error': form.errors['dash_address'][0],
             },
         )
 
