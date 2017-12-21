@@ -57,7 +57,6 @@ class TransactionStates(object):
 
 
 class BaseTransaction(models.Model, TransactionStates):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     dash_address = models.CharField(
@@ -120,6 +119,8 @@ class DepositTransaction(BaseTransaction):
         ),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
         choices=STATE_CHOICES,
@@ -159,6 +160,12 @@ class DepositTransaction(BaseTransaction):
 
 
 class WithdrawalTransaction(BaseTransaction):
+    id = models.BigAutoField(
+        primary_key=True,
+        serialize=False,
+        verbose_name='ID',
+    )
+
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
     )

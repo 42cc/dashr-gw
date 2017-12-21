@@ -55,10 +55,6 @@ class BaseTransactionModelTest(TestCase):
     def test_transaction_model_abstract(self):
         self.assertTrue(self.transaction._meta.abstract)
 
-    def test_transaction_has_uuid_primary_key(self):
-        self.assertTrue(hasattr(self.transaction, 'id'))
-        self.assertIsInstance(self.transaction.id, uuid.UUID)
-
     def test_has_dash_address(self):
         self.assertTrue(hasattr(self.transaction, 'dash_address'))
         self.assertIsInstance(self.transaction.dash_address, unicode)
@@ -77,6 +73,10 @@ class DepositModelTest(TestCase):
 
     def test_inherits_base_transaction_model(self):
         self.assertTrue(issubclass(DepositTransaction, BaseTransaction))
+
+    def test_deposit_transaction_has_uuid_primary_key(self):
+        self.assertTrue(hasattr(self.transaction, 'id'))
+        self.assertIsInstance(self.transaction.id, uuid.UUID)
 
     def test_has_ripple_address(self):
         self.assertTrue(hasattr(self.transaction, 'ripple_address'))
