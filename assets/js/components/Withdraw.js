@@ -18,7 +18,11 @@ export default class DepositDash extends React.Component {
                     <Col sm={12} md={6}>
                         <b>You have initiated a transaction from Ripple to Dash</b>
                         <p>
-                            <span>Please transfer your Ripple tokens to this address:</span>
+                            <span>Please transfer your Ripple tokens with a destination tag</span>
+                            {' '}
+                            <b>{this.state.destinationTag}</b>
+                            {' '}
+                            <span>to this address:</span>
                             {' '}
                             <b>{this.state.rippleAddress}</b>
                         </p>
