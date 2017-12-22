@@ -101,8 +101,11 @@ class WithdrawalSubmitApiView(BaseFormView):
             {
                 'success': True,
                 'ripple_address': ripple_address,
-                'status_url': '/status',
                 'destination_tag': transaction.destination_tag,
+                'status_url': reverse(
+                    'withdrawal-status',
+                    args=(transaction.id,),
+                ),
             },
         )
 
