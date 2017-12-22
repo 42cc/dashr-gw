@@ -12,7 +12,12 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
-from .models import Page, DepositTransaction, RippleWalletCredentials
+from .models import (
+    DepositTransaction,
+    Page,
+    RippleWalletCredentials,
+    WithdrawalTransaction,
+)
 from .tasks import (
     monitor_dash_to_ripple_transaction,
     monitor_ripple_to_dash_transaction,
@@ -120,11 +125,28 @@ class DepositStatusApiView(View):
         return JsonResponse(
             {
                 'transactionId': transaction.id,
-                'rippleAddress': transaction.ripple_address,
-                'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
                     gateway_ripple_address=ripple_address,
+                    **transaction.__dict__
+                ),
+                'stateHistory': transaction.get_state_history(),
+            }
+        )
+
+
+class WithdrawalStatusApiView(View):
+    @staticmethod
+    def get(request, transaction_id):
+        transaction = get_object_or_404(
+            WithdrawalTransaction,
+            id=transaction_id,
+        )
+        return JsonResponse(
+            {
+                'transactionId': transaction.id,
+                'state': transaction.get_state_display().format(
+                    destination_tag=transaction.destination_tag,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),

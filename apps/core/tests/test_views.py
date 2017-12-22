@@ -11,11 +11,17 @@ from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import DepositTransaction, Page, RippleWalletCredentials
+from apps.core.models import (
+    DepositTransaction,
+    Page,
+    RippleWalletCredentials,
+    WithdrawalTransaction,
+)
 from apps.core.views import (
     DepositSubmitApiView,
     WithdrawalSubmitApiView,
     DepositStatusApiView,
+    WithdrawalStatusApiView,
 )
 
 
@@ -185,11 +191,36 @@ class DepositStatusApiViewTest(TestCase):
         expected_response_content = json.dumps(
             {
                 'transactionId': transaction.id,
-                'rippleAddress': transaction.ripple_address,
-                'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
                     gateway_ripple_address=ripple_address,
+                    **transaction.__dict__
+                ),
+                'stateHistory': transaction.get_state_history(),
+            },
+            cls=DjangoJSONEncoder,
+        )
+        self.assertEqual(response.content, expected_response_content)
+
+
+class WithdrawalStatusApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    def test_view_returns_valid_data(self):
+        transaction = WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+        )
+        transaction.state = transaction.CONFIRMED
+        transaction.save()
+        request = self.factory.get('')
+        response = WithdrawalStatusApiView.as_view()(request, transaction.id)
+        expected_response_content = json.dumps(
+            {
+                'transactionId': transaction.id,
+                'state': transaction.get_state_display().format(
+                    destination_tag=transaction.destination_tag,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),
