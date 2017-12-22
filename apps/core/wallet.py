@@ -1,5 +1,4 @@
 from bitcoinrpc.authproxy import AuthServiceProxy
-from ripple_api import ripple_api
 
 from django.conf import settings
 
@@ -38,15 +37,5 @@ class DashWallet(object):
     def send_to_address(self, address, amount):
         self._rpc_connection.sendtoaddress(address, amount)
 
-
-class RippleWallet(object):
-    account = settings.RIPPLE_ACCOUNT
-    dash_currency_issuer = settings.RIPPLE_ACCOUNT
-    dash_currency_code = 'DSH'
-
-    def get_dash_balance(self):
-        return ripple_api.balance(
-            self.account,
-            self.dash_currency_issuer,
-            self.dash_currency_code,
-        )
+    def check_address_valid(self, address):
+        return self._rpc_connection.validateaddress(address)['isvalid']

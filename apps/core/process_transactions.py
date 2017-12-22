@@ -17,6 +17,7 @@ django.setup()
 from ripple_api.models import Transaction as RippleTransaction
 from ripple_api.tasks import sign_task, submit_task
 
+from apps.core.models import RippleWalletCredentials
 from apps.core.wallet import DashWallet, RippleWallet
 
 logging.basicConfig(
@@ -34,16 +35,17 @@ def process_dash_to_ripple(cursor, dash_wallet):
     ).fetchall()
     if not dash2ripple_transactions:
         logger.info('Found no Dash to Ripple transactions.')
+    ripple_credentials = RippleWalletCredentials.objects.get()
     for transaction in dash2ripple_transactions:
         balance = dash_wallet.get_address_balance(transaction[2])
         if balance:
             transaction_obj = RippleTransaction.objects.create(
-                account=RippleWallet.account,
+                account=ripple_credentials.address,
                 destination=transaction[1],
-                currency=RippleWallet.dash_currency_code,
+                currency='DSH',
                 value='{0:f}'.format(balance),
             )
-            sign_task(transaction_obj.pk, settings.RIPPLE_SECRET)
+            sign_task(transaction_obj.pk, ripple_credentials.secret)
             submit_task(transaction_obj.pk)
             cursor.execute(
                 '''
@@ -66,9 +68,13 @@ def process_ripple_to_dash(cursor, dash_wallet):
     ).fetchall()
     if not ripple2dash_transactions:
         logger.info('Found no Ripple to Dash transactions.')
+        return
+    ripple_address = RippleWalletCredentials.objects.only(
+        'address',
+    ).get().address
     for transaction in ripple2dash_transactions:
         transaction_obj = RippleTransaction.objects.filter(
-            destination=settings.RIPPLE_ACCOUNT,
+            destination=ripple_address,
             destination_tag=str(transaction[0]),
         )
         if transaction_obj:

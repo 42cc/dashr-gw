@@ -4,6 +4,16 @@ from django.core.exceptions import ValidationError
 
 from ripple_api import utils as ripple_api_utils
 
+from apps.core.wallet import DashWallet
+
+
+def dash_address_validator(address):
+    if not DashWallet().check_address_valid(address):
+        raise ValidationError(
+            'The Dash address is not valid',
+            code='invalid',
+        )
+
 
 def ripple_address_validator(address):
     """

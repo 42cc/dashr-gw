@@ -11,8 +11,12 @@ from django.http.response import JsonResponse
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 
-from apps.core.models import DepositTransaction, Page
-from apps.core.views import DepositSubmitApiView, DepositStatusApiView
+from apps.core.models import DepositTransaction, Page, RippleWalletCredentials
+from apps.core.views import (
+    DepositSubmitApiView,
+    WithdrawalSubmitApiView,
+    DepositStatusApiView,
+)
 
 
 class GetPageDetailsViewTest(TestCase):
@@ -72,6 +76,9 @@ class DepositSubmitApiViewTest(TestCase):
     def setUpTestData(cls):
         cls.factory = RequestFactory()
 
+    def setUp(self):
+        RippleWalletCredentials.get_solo()
+
     @patch('apps.core.views.monitor_dash_to_ripple_transaction.apply_async')
     @patch('apps.core.models.DashWallet.get_new_address')
     def test_view_with_valid_form(
@@ -109,6 +116,54 @@ class DepositSubmitApiViewTest(TestCase):
         )
 
 
+class WithdrawalSubmitApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    def setUp(self):
+        RippleWalletCredentials.get_solo()
+
+    @patch('apps.core.views.monitor_ripple_to_dash_transaction.apply_async')
+    @patch('apps.core.models.DashWallet.check_address_valid')
+    def test_view_with_valid_form(
+        self,
+        patched_check_address_valid,
+        patched_monitor_task,
+    ):
+        patched_check_address_valid.return_value = True
+        request = self.factory.post(
+            '',
+            {'dash_address': 'yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9'},
+        )
+        response = WithdrawalSubmitApiView.as_view()(request)
+        patched_monitor_task.assert_called_once()
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('ripple_address', response_content)
+        self.assertIn('destination_tag', response_content)
+        self.assertIn('status_url', response_content)
+        self.assertEqual(response_content['success'], True)
+
+    @patch('apps.core.models.DashWallet.check_address_valid')
+    def test_view_with_invalid_form(self, patched_check_address_valid):
+        patched_check_address_valid.return_value = False
+        request = self.factory.post('', {'dash_address': 'Invalid address'})
+        response = WithdrawalSubmitApiView.as_view()(request)
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_content = json.loads(response.content)
+        self.assertIn('success', response_content)
+        self.assertIn('dash_address_error', response_content)
+        self.assertEqual(response_content['success'], False)
+        self.assertEqual(
+            response_content['dash_address_error'],
+            'The Dash address is not valid',
+        )
+
+
 class DepositStatusApiViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -119,6 +174,7 @@ class DepositStatusApiViewTest(TestCase):
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         )
+        ripple_address = RippleWalletCredentials.get_solo().address
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
@@ -133,7 +189,7 @@ class DepositStatusApiViewTest(TestCase):
                 'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    gateway_ripple_address=ripple_address,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),

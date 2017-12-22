@@ -4,16 +4,19 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import BaseFormView
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .forms import DepositTransactionModelForm
-from .models import Page, DepositTransaction
-from .tasks import monitor_dash_to_ripple_transaction
+from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
+from .models import Page, DepositTransaction, RippleWalletCredentials
+from .tasks import (
+    monitor_dash_to_ripple_transaction,
+    monitor_ripple_to_dash_transaction,
+)
 
 
 class IndexView(TemplateView):
@@ -46,15 +49,9 @@ class GetPageDetailsView(View):
         return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
-class DepositSubmitApiView(View, FormMixin):
+class DepositSubmitApiView(BaseFormView):
     form_class = DepositTransactionModelForm
-
-    def post(self, request):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+    http_method_names = ('post', 'put')
 
     def form_valid(self, form):
         transaction = form.save()
@@ -82,10 +79,44 @@ class DepositSubmitApiView(View, FormMixin):
         )
 
 
+class WithdrawalSubmitApiView(BaseFormView):
+    form_class = WithdrawalTransactionModelForm
+    http_method_names = ('post', 'put')
+
+    def form_valid(self, form):
+        transaction = form.save()
+        monitor_ripple_to_dash_transaction.apply_async(
+            (transaction.id,),
+            countdown=30,
+        )
+        ripple_address = RippleWalletCredentials.objects.only(
+            'address',
+        ).get().address
+        return JsonResponse(
+            {
+                'success': True,
+                'ripple_address': ripple_address,
+                'status_url': '/status',
+                'destination_tag': transaction.destination_tag,
+            },
+        )
+
+    def form_invalid(self, form):
+        return JsonResponse(
+            {
+                'success': False,
+                'dash_address_error': form.errors['dash_address'][0],
+            },
+        )
+
+
 class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
         transaction = get_object_or_404(DepositTransaction, id=transaction_id)
+        ripple_address = RippleWalletCredentials.objects.only(
+            'address',
+        ).get().address
         return JsonResponse(
             {
                 'transactionId': transaction.id,
@@ -93,7 +124,7 @@ class DepositStatusApiView(View):
                 'dashAddress': transaction.dash_address,
                 'state': transaction.get_state_display().format(
                     confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                    gateway_ripple_address=ripple_address,
                     **transaction.__dict__
                 ),
                 'stateHistory': transaction.get_state_history(),

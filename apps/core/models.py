@@ -3,14 +3,35 @@ from __future__ import unicode_literals
 
 import uuid
 
+from encrypted_fields import EncryptedCharField
+from solo.models import SingletonModel
+
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import formats
 from django.utils.translation import ugettext as _
 
-from apps.core.validators import ripple_address_validator
+from apps.core.validators import (
+    dash_address_validator,
+    ripple_address_validator,
+)
 from apps.core.wallet import DashWallet
+
+
+class RippleWalletCredentials(SingletonModel):
+    address = models.CharField(
+        max_length=35,
+        validators=[ripple_address_validator],
+        verbose_name='Address',
+    )
+    secret = EncryptedCharField(max_length=29, verbose_name='Secret key')
+
+    def __str__(self):
+        return 'Ripple Wallet Credentials'
+
+    class Meta:
+        verbose_name = 'Ripple Wallet Credentials'
 
 
 class Page(models.Model):
@@ -35,9 +56,19 @@ class TransactionStates(object):
     NO_RIPPLE_TRUST = 7
 
 
-class Transaction(models.Model, TransactionStates):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class BaseTransaction(models.Model, TransactionStates):
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    dash_address = models.CharField(
+        max_length=35,
+        validators=[dash_address_validator],
+    )
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         abstract = True
@@ -54,7 +85,7 @@ class Transaction(models.Model, TransactionStates):
         ]
 
 
-class DepositTransaction(Transaction):
+class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
         (TransactionStates.INITIATED, 'Initiated'),
         (
@@ -88,6 +119,8 @@ class DepositTransaction(Transaction):
         ),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
         choices=STATE_CHOICES,
@@ -96,14 +129,7 @@ class DepositTransaction(Transaction):
         max_length=35,
         validators=[ripple_address_validator],
     )
-    dash_address = models.CharField(max_length=35)
 
-    dash_to_transfer = models.DecimalField(
-        max_digits=16,
-        decimal_places=8,
-        blank=True,
-        null=True,
-    )
     outgoing_ripple_transaction_hash = models.CharField(
         max_length=64,
         blank=True,
@@ -120,14 +146,45 @@ class DepositTransaction(Transaction):
 
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
+        ripple_address = RippleWalletCredentials.objects.only(
+            'address',
+        ).get().address
         DepositTransactionStateChange.objects.create(
             transaction=instance,
             current_state=instance.get_state_display().format(
                 confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                gateway_ripple_address=settings.RIPPLE_ACCOUNT,
+                gateway_ripple_address=ripple_address,
                 **instance.__dict__
             ),
         )
+
+
+class WithdrawalTransaction(BaseTransaction):
+    id = models.BigAutoField(
+        primary_key=True,
+        serialize=False,
+        verbose_name='ID',
+    )
+
+    state = models.PositiveSmallIntegerField(
+        default=TransactionStates.INITIATED,
+    )
+
+    incoming_ripple_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+    outgoing_dash_transaction_hash = models.CharField(
+        max_length=64,
+        blank=True,
+    )
+
+    def __str__(self):
+        return 'Withdrawal {}'.format(self.id)
+
+    @property
+    def destination_tag(self):
+        return self.id
 
 
 class BaseTransactionStateChange(models.Model):
