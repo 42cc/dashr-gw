@@ -18,6 +18,7 @@ from apps.core.models import (
     Page,
     BaseTransaction,
     WithdrawalTransaction,
+    WithdrawalTransactionStateChange,
 )
 
 
@@ -135,6 +136,18 @@ class WithdrawalModelTest(TestCase):
         transaction = WithdrawalTransaction()
         self.assertTrue(hasattr(transaction, 'destination_tag'))
         self.assertEqual(transaction.destination_tag, transaction.id)
+
+    def test_state_change_instance_is_created_after_save(self):
+        transaction = WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+        )
+        last_state_change = WithdrawalTransactionStateChange.objects.last()
+        self.assertIsNotNone(last_state_change)
+        self.assertEqual(last_state_change.transaction_id, transaction.id)
+        self.assertEqual(
+            last_state_change.current_state,
+            transaction.get_state_display(),
+        )
 
 
 class RippleWalletCredentialsModelTest(TestCase):

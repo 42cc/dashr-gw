@@ -211,6 +211,16 @@ class WithdrawalTransaction(BaseTransaction):
     def destination_tag(self):
         return self.id
 
+    @staticmethod
+    def post_save_signal_handler(instance, **kwargs):
+        WithdrawalTransactionStateChange.objects.create(
+            transaction=instance,
+            current_state=instance.get_state_display().format(
+                destination_tag=instance.destination_tag,
+                **instance.__dict__
+            ),
+        )
+
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
@@ -237,4 +247,8 @@ class WithdrawalTransactionStateChange(BaseTransactionStateChange):
 post_save.connect(
     DepositTransaction.post_save_signal_handler,
     sender=DepositTransaction,
+)
+post_save.connect(
+    WithdrawalTransaction.post_save_signal_handler,
+    sender=WithdrawalTransaction,
 )
