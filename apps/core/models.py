@@ -214,6 +214,7 @@ class WithdrawalTransaction(BaseTransaction):
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
+    current_state = models.CharField(max_length=500)
 
     class Meta:
         abstract = True
@@ -224,7 +225,13 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
         DepositTransaction,
         related_name='state_changes',
     )
-    current_state = models.CharField(max_length=500)
+
+
+class WithdrawalTransactionStateChange(BaseTransactionStateChange):
+    transaction = models.ForeignKey(
+        WithdrawalTransaction,
+        related_name='state_changes',
+    )
 
 
 post_save.connect(
