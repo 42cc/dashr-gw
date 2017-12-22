@@ -105,7 +105,7 @@ class DepositTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            '`Received 0 Dash transactions. Transactions to the address '
+            'Received 0 Dash transactions. Transactions to the address '
             '{dash_address} are no longer tracked',
         ),
         (
@@ -160,6 +160,30 @@ class DepositTransaction(BaseTransaction):
 
 
 class WithdrawalTransaction(BaseTransaction):
+    STATE_CHOICES = (
+        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.CONFIRMED,
+            'Received an incoming transaction '
+            '{incoming_ripple_transaction_hash} ({dash_to_transfer} DASH). '
+            'Initiated an outgoing one',
+        ),
+        (
+            TransactionStates.PROCESSED,
+            'Transaction is processed. Hash of a Dash transaction is '
+            '{outgoing_dash_transaction_hash}',
+        ),
+        (
+            TransactionStates.OVERDUE,
+            'Received 0 Ripple transactions. Transactions with the '
+            'destination tag {destination_tag} are no longer tracked',
+        ),
+        (
+            TransactionStates.FAILED,
+            'Transaction failed. Please contact our support team',
+        ),
+    )
+
     id = models.BigAutoField(
         primary_key=True,
         serialize=False,
@@ -168,6 +192,7 @@ class WithdrawalTransaction(BaseTransaction):
 
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
+        choices=STATE_CHOICES,
     )
 
     incoming_ripple_transaction_hash = models.CharField(
