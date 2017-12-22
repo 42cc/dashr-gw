@@ -11,11 +11,8 @@ import InputGroup from 'react-bootstrap/lib/InputGroup';
 
 export default class DepositDash extends React.Component {
     render() {
-        const title = (
-            <h3>Withdraw DASH from Ripple</h3>
-        )
         return (
-            <Panel header={title} bsStyle="default"
+            <Panel header="Withdraw DASH from Ripple" bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={6}>
                     <Form>
