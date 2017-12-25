@@ -89,7 +89,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         self.assertEqual(self.transaction.state, self.transaction.OVERDUE)
 
     @patch('apps.core.models.DashWallet.get_address_balance')
-    def test_makes_transaction_as_overdue_if_time_not_exceeded(
+    def test_not_marks_transaction_as_overdue_if_time_not_exceeded(
         self,
         patched_get_address_balance,
     ):
