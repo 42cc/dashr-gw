@@ -1,7 +1,9 @@
 import logging
 import socket
+from decimal import Decimal
 
 import celery
+import six
 from bitcoinrpc.authproxy import JSONRPCException
 from ripple_api.management.transaction_processors import monitor_transactions
 from ripple_api.models import Transaction as RippleTransaction
@@ -26,27 +28,32 @@ def monitor_transactions_task():
     monitor_transactions(ripple_address)
 
 
-class CeleryDepositTransactionBaseTask(celery.Task):
+class CeleryTransactionBaseTask(celery.Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        transaction = models.DepositTransaction.objects.only('id').get(
-            id=args[0],
+        transaction_id = args[0]
+        if isinstance(transaction_id, six.integer_types):
+            transaction_model = models.WithdrawalTransaction
+        else:
+            transaction_model = models.DepositTransaction
+        transaction = transaction_model.objects.only('id').get(
+            id=transaction_id,
         )
         transaction.state = transaction.FAILED
         transaction.save()
 
 
-celery_deposit_transaction_task = celery_app.task(
-    base=CeleryDepositTransactionBaseTask,
+celery_transaction_task = celery_app.task(
+    base=CeleryTransactionBaseTask,
     # Retry if the system cannot connect to a Dash or DB server.
     autoretry_for=(socket.error, DatabaseError, JSONRPCException),
     retry_kwargs={
         'max_retries': None,
-        'countdown': settings.TRANSACTION_OVERDUE_MINUTES,
+        'countdown': 30,
     },
 )
 
 
-@celery_deposit_transaction_task
+@celery_transaction_task
 def monitor_dash_to_ripple_transaction(transaction_id):
     logger.info('Deposit {}. Monitoring'.format(transaction_id))
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
@@ -78,7 +85,7 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         )
 
 
-@celery_deposit_transaction_task
+@celery_transaction_task
 def monitor_transaction_confirmations_number(transaction_id):
     logger.info(
         'Deposit {}. Monitoring number of confirmations'.format(
@@ -114,7 +121,7 @@ def monitor_transaction_confirmations_number(transaction_id):
     )
 
 
-@celery_deposit_transaction_task
+@celery_transaction_task
 def send_ripple_transaction(transaction_id):
     logger.info(
         'Deposit {}. Sending Ripple transaction'.format(transaction_id),

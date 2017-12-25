@@ -11,19 +11,28 @@ from apps.core import models, tasks
 from gateway import celery_app
 
 
-class CeleryDepositTransactionBaseTaskTest(TestCase):
+class CeleryTransactionBaseTaskTest(TestCase):
     def setUp(self):
         models.RippleWalletCredentials.get_solo()
 
     @patch('apps.core.models.DashWallet.get_new_address')
-    def test_task_on_failure(self, patched_get_new_address):
+    def test_task_on_failure_with_deposit(self, patched_get_new_address):
         patched_get_new_address.return_value = (
             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
         )
         transaction = models.DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
-        task = tasks.CeleryDepositTransactionBaseTask()
+        task = tasks.CeleryTransactionBaseTask()
+        task.on_failure(None, None, (transaction.id,), None, None)
+        transaction.refresh_from_db()
+        self.assertEqual(transaction.state, transaction.FAILED)
+
+    def test_task_on_failure_with_withdrawal(self):
+        transaction = models.WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+        )
+        task = tasks.CeleryTransactionBaseTask()
         task.on_failure(None, None, (transaction.id,), None, None)
         transaction.refresh_from_db()
         self.assertEqual(transaction.state, transaction.FAILED)
