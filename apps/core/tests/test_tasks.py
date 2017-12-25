@@ -81,7 +81,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_get_address_balance.return_value = 0
         self.transaction.timestamp = (
             self.transaction.timestamp -
-            timedelta(settings.TRANSACTION_OVERDUE_MINUTES + 1)
+            timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
         )
         self.transaction.save()
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))

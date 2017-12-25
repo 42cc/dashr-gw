@@ -72,11 +72,11 @@ def monitor_dash_to_ripple_transaction(transaction_id):
 
     # If transaction is overdue.
     if transaction.timestamp + timedelta(
-        settings.TRANSACTION_OVERDUE_MINUTES,
+        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
     ) < now():
         transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
-        logger.info('Deposit {}. Became overdue')
+        logger.info('Deposit {}. Became overdue'.format(transaction_id))
     else:
         raise monitor_dash_to_ripple_transaction.retry(
             (transaction_id,),
