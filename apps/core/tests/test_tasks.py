@@ -2,6 +2,7 @@ import socket
 from datetime import timedelta
 
 from mock import patch
+from ripple_api.models import Transaction as RippleTransaction
 
 from django.conf import settings
 from django.db.utils import OperationalError
@@ -302,3 +303,72 @@ class SendRippleTransactionTaskTest(TestCase):
         tasks.send_ripple_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.state, self.transaction.FAILED)
+
+
+class MonitorRippleToDashTransactionTaskTest(TestCase):
+    def setUp(self):
+        celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        self.ripple_credentials = models.RippleWalletCredentials.get_solo()
+        self.transaction = models.WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+        )
+
+    def create_ripple_transaction(self):
+        return RippleTransaction.objects.create(
+            destination_tag=self.transaction.destination_tag,
+            issuer=self.ripple_credentials.address,
+            currency='DSH',
+            status=RippleTransaction.RECEIVED,
+            hash='some_hash',
+            value='1',
+        )
+
+    def test_modifies_transaction_if_ripple_transaction_exists(self):
+        ripple_transaction = self.create_ripple_transaction()
+        tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
+        self.assertEqual(
+            self.transaction.incoming_ripple_transaction_hash,
+            ripple_transaction.hash,
+        )
+        self.assertEqual(
+            self.transaction.dash_to_transfer,
+            float(ripple_transaction.value),
+        )
+
+    @patch('apps.core.tasks.send_dash_transaction.delay')
+    def test_launches_send_dash_transaction_if_balance_positive(
+        self,
+        patched_send_dash_transaction_task_delay,
+    ):
+        self.create_ripple_transaction()
+        tasks.monitor_ripple_to_dash_transaction.apply(
+            (self.transaction.id,),
+        )
+        patched_send_dash_transaction_task_delay.assert_called_once()
+
+    def test_marks_transaction_as_overdue_if_time_exceeded(self):
+        self.transaction.timestamp = (
+            self.transaction.timestamp -
+            timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
+        )
+        self.transaction.save()
+        tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.OVERDUE)
+
+    def test_not_marks_transaction_as_overdue_if_time_not_exceeded(
+        self,
+    ):
+        tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertNotEqual(self.transaction.state, self.transaction.OVERDUE)
+
+    @patch('apps.core.tasks.monitor_ripple_to_dash_transaction.retry')
+    def test_retries_if_no_ripple_transaction_is_found(
+        self,
+        patched_retry,
+    ):
+        tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
+        patched_retry.assert_called_once()

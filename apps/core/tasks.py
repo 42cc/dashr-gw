@@ -203,6 +203,56 @@ def send_ripple_transaction(transaction_id):
     dash_transaction.save()
 
 
-@celery_app.task
+@celery_transaction_task
 def monitor_ripple_to_dash_transaction(transaction_id):
+    logger.info('Withdrawal {}. Monitoring'.format(transaction_id))
+    transaction = models.WithdrawalTransaction.objects.get(id=transaction_id)
+
+    ripple_gateway_address = models.RippleWalletCredentials.objects.only(
+        'address',
+    ).get().address
+
+    ripple_transaction = RippleTransaction.objects.filter(
+        destination_tag=transaction.destination_tag,
+        currency='DSH',
+        issuer=ripple_gateway_address,
+        status=RippleTransaction.RECEIVED,
+    ).first()
+
+    if ripple_transaction is not None:
+        logger.info(
+            'Deposit {}. Received a Ripple transaction {} ({} DSH)'.format(
+                transaction_id,
+                ripple_transaction.hash,
+                ripple_transaction.value,
+            ),
+        )
+
+        transaction.state = transaction.CONFIRMED
+        transaction.incoming_ripple_transaction_hash = ripple_transaction.hash
+        transaction.dash_to_transfer = Decimal(ripple_transaction.value)
+        transaction.save()
+
+        send_dash_transaction.delay(transaction_id)
+        return
+
+    logger.info(
+        'Withdrawal {}. No transaction found yet'.format(transaction_id),
+    )
+    if transaction.timestamp + timedelta(
+        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
+    ) < now():
+        transaction.state = transaction.OVERDUE
+        transaction.save(update_fields=('state',))
+        logger.info('Withdrawal {}. Became overdue'.format(transaction_id))
+    else:
+        raise monitor_ripple_to_dash_transaction.retry(
+            (transaction_id,),
+            countdown=60,
+            max_retries=settings.TRANSACTION_OVERDUE_MINUTES,
+        )
+
+
+@celery_transaction_task
+def send_dash_transaction(transaction_id):
     pass
