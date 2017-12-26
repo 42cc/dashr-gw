@@ -90,12 +90,12 @@ class DepositTransaction(BaseTransaction):
         (TransactionStates.INITIATED, 'Initiated'),
         (
             TransactionStates.UNCONFIRMED,
-            'Received an incoming transaction ({dash_to_transfer} DASH). '
+            'Received an incoming transaction ({dash_to_transfer:f} DASH). '
             'Waiting for {confirmations_number} confirmations',
         ),
         (
             TransactionStates.CONFIRMED,
-            'Confirmed the incoming transaction ({dash_to_transfer} DASH). '
+            'Confirmed the incoming transaction ({dash_to_transfer:f} DASH). '
             'Initiated an outgoing one',
         ),
         (
@@ -165,7 +165,7 @@ class WithdrawalTransaction(BaseTransaction):
         (
             TransactionStates.CONFIRMED,
             'Received an incoming transaction '
-            '{incoming_ripple_transaction_hash} ({dash_to_transfer} DASH). '
+            '{incoming_ripple_transaction_hash} ({dash_to_transfer:f} DASH). '
             'Initiated an outgoing one',
         ),
         (
