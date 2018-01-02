@@ -95,7 +95,10 @@ class DepositSubmitApiViewTest(TestCase):
         patched_get_new_address.return_value = ''
         request = self.factory.post(
             '',
-            {'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7'},
+            {
+                'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+                'dash_to_transfer': 1,
+            },
         )
         response = DepositSubmitApiView.as_view()(request)
         patched_monitor_task.assert_called_once()
@@ -140,7 +143,10 @@ class WithdrawalSubmitApiViewTest(TestCase):
         patched_check_address_valid.return_value = True
         request = self.factory.post(
             '',
-            {'dash_address': 'yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9'},
+            {
+                'dash_address': 'yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+                'dash_to_transfer': 1,
+            },
         )
         response = WithdrawalSubmitApiView.as_view()(request)
         patched_monitor_task.assert_called_once()
@@ -183,9 +189,11 @@ class DepositStatusApiViewTest(TestCase):
         ripple_address = RippleWalletCredentials.get_solo().address
         transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
         )
         transaction.state = transaction.UNCONFIRMED
         transaction.save()
+        transaction.refresh_from_db()
         request = self.factory.get('')
         response = DepositStatusApiView.as_view()(request, transaction.id)
         expected_response_content = json.dumps(
@@ -211,9 +219,11 @@ class WithdrawalStatusApiViewTest(TestCase):
     def test_view_returns_valid_data(self):
         transaction = WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
         )
         transaction.state = transaction.CONFIRMED
         transaction.save()
+        transaction.refresh_from_db()
         request = self.factory.get('')
         response = WithdrawalStatusApiView.as_view()(request, transaction.id)
         expected_response_content = json.dumps(
