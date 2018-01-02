@@ -10,7 +10,7 @@ from apps.core.wallet import DashWallet
 def dash_address_validator(address):
     if not DashWallet().check_address_valid(address):
         raise ValidationError(
-            'The Dash address is not valid',
+            'The Dash address is not valid.',
             code='invalid',
         )
 
