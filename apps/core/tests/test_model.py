@@ -71,6 +71,7 @@ class DepositModelTest(TestCase):
         RippleWalletCredentials.get_solo()
         cls.transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
         )
 
     def test_inherits_base_transaction_model(self):
@@ -140,6 +141,7 @@ class WithdrawalModelTest(TestCase):
     def test_state_change_instance_is_created_after_save(self):
         transaction = WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
         )
         last_state_change = WithdrawalTransactionStateChange.objects.last()
         self.assertIsNotNone(last_state_change)
