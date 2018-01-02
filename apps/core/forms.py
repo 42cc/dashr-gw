@@ -12,4 +12,4 @@ class DepositTransactionModelForm(forms.ModelForm):
 class WithdrawalTransactionModelForm(forms.ModelForm):
     class Meta:
         model = WithdrawalTransaction
-        fields = ('dash_address',)
+        fields = ('dash_address', 'dash_to_transfer')
