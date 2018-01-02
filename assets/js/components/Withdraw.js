@@ -8,7 +8,6 @@ import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
 import HelpBlock from 'react-bootstrap/lib/HelpBlock';
 import Col from 'react-bootstrap/lib/Col';
-import InputGroup from 'react-bootstrap/lib/InputGroup';
 
 export default class DepositDash extends React.Component {
     render() {
@@ -18,13 +17,12 @@ export default class DepositDash extends React.Component {
                     <Col sm={12} md={6}>
                         <b>You have initiated a transaction from Ripple to Dash</b>
                         <p>
-                            <span>Please transfer your Ripple tokens with a destination tag</span>
-                            {' '}
-                            <b>{this.state.destinationTag}</b>
-                            {' '}
-                            <span>to this address:</span>
-                            {' '}
-                            <b>{this.state.rippleAddress}</b>
+                            <span>Please transfer </span>
+                            <b>{this.state.dashToTransfer} </b>
+                            <span>Ripple token{this.state.dashToTransfer == 1 ? null : 's'} with a destination tag </span>
+                            <b>{this.state.destinationTag} </b>
+                            <span>to this address: </span>
+                            <b>{this.state.rippleAddress} </b>
                         </p>
                         <p>
                             You can track status of this transaction
@@ -41,22 +39,28 @@ export default class DepositDash extends React.Component {
                 <Col sm={12} md={6}>
                     <Form onSubmit={this.handleFormSubmit.bind(this)} id="withdrawal-form">
                         <DjangoCSRFToken/>
-                        <FormGroup controlId="id_dash_address">
-                            <Col md={12}>
-                                <ControlLabel>Enter your dash address, please:</ControlLabel>
-                                <InputGroup>
-                                    <FormControl type="text" name="dash_address"/>
-                                    <InputGroup.Button>
-                                        <Button type="submit">Start</Button>
-                                    </InputGroup.Button>
-                                </InputGroup>
-                                {this.getDashAddressError()}
-                                <FormControl.Feedback />
-                                <HelpBlock>
-                                    <Button bsStyle="link" href="/withdraw/how-to/">Need help?</Button>
-                                </HelpBlock>
-                            </Col>
+                        <FormGroup controlId="dash_address_input"
+                                   validationState={this.getFieldValidationState('dash_address')}>
+                            <ControlLabel>Your Dash Address:</ControlLabel>
+                            <FormControl type="text" name="dash_address" required />
+                            {this.getFieldError('dash_address')}
+                            <FormControl.Feedback />
                         </FormGroup>
+                        <FormGroup controlId="dash_to_transfer_input"
+                                   validationState={this.getFieldValidationState('dash_to_transfer')}>
+                            <ControlLabel>Withdrawal Amount:</ControlLabel>
+                            <FormControl type="number"
+                                         name="dash_to_transfer"
+                                         step="0.00000001"
+                                         min="0.00000001"
+                                         required/>
+                            {this.getFieldError('dash_to_transfer')}
+                            <FormControl.Feedback />
+                        </FormGroup>
+                        <Button block type="submit">Start</Button>
+                        <HelpBlock>
+                            <Button bsStyle="link" href="/withdraw/how-to/">Need help?</Button>
+                        </HelpBlock>
                     </Form>
                 </Col>
             </Panel>
@@ -74,20 +78,33 @@ export default class DepositDash extends React.Component {
                 this.setState({
                     rippleAddress: data['ripple_address'],
                     destinationTag: data['destination_tag'],
+                    dashToTransfer: data['dash_to_transfer'],
                     statusUrl: data['status_url'],
                 });
             } else {
-                $('#deposit-form .form-group').addClass('has-error');
-                this.setState({dashAddressError: data['dash_address_error']});
+                this.setState({formErrors: data['form_errors']});
             }
         }).always(() => {$('button[type="submit"]').prop('disabled', false);})
     }
 
-    getDashAddressError() {
-        if (this.state && this.state.dashAddressError) {
+    hasErrorsField(fieldName) {
+        if (this.state && this.state.formErrors[fieldName]) {
+            return true;
+        }
+        return false;
+    }
+
+    getFieldError(fieldName) {
+        if (this.hasErrorsField(fieldName)) {
             return (
-                <HelpBlock>{this.state.dashAddressError}</HelpBlock>
+                <HelpBlock>{this.state.formErrors[fieldName][0]}</HelpBlock>
             );
+        }
+    }
+
+    getFieldValidationState(fieldName) {
+        if (this.hasErrorsField(fieldName)) {
+            return "error";
         }
     }
 }

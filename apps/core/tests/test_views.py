@@ -156,6 +156,7 @@ class WithdrawalSubmitApiViewTest(TestCase):
         self.assertIn('success', response_content)
         self.assertIn('ripple_address', response_content)
         self.assertIn('destination_tag', response_content)
+        self.assertIn('dash_to_transfer', response_content)
         self.assertIn('status_url', response_content)
         self.assertEqual(response_content['success'], True)
 
