@@ -113,7 +113,7 @@ class WithdrawalSubmitApiView(BaseFormView):
         return JsonResponse(
             {
                 'success': False,
-                'dash_address_error': form.errors['dash_address'][0],
+                'form_errors': form.errors,
             },
         )
 

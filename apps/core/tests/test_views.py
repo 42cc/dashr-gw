@@ -168,11 +168,14 @@ class WithdrawalSubmitApiViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
         self.assertIn('success', response_content)
-        self.assertIn('dash_address_error', response_content)
+        self.assertIn('form_errors', response_content)
         self.assertEqual(response_content['success'], False)
         self.assertEqual(
-            response_content['dash_address_error'],
-            'The Dash address is not valid',
+            response_content['form_errors'],
+            {
+                'dash_address': ['The Dash address is not valid.'],
+                'dash_to_transfer': ['This field is required.'],
+            },
         )
 
 
