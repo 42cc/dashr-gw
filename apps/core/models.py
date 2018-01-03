@@ -15,6 +15,7 @@ from django.utils.translation import ugettext as _
 from apps.core.validators import (
     dash_address_validator,
     ripple_address_validator,
+    withdrawal_min_dash_amount_validator,
 )
 from apps.core.wallet import DashWallet
 
@@ -62,10 +63,6 @@ class BaseTransaction(models.Model, TransactionStates):
     dash_address = models.CharField(
         max_length=35,
         validators=[dash_address_validator],
-    )
-    dash_to_transfer = models.DecimalField(
-        max_digits=16,
-        decimal_places=8,
     )
 
     class Meta:
@@ -118,6 +115,11 @@ class DepositTransaction(BaseTransaction):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+    )
 
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
@@ -186,6 +188,12 @@ class WithdrawalTransaction(BaseTransaction):
         primary_key=True,
         serialize=False,
         verbose_name='ID',
+    )
+
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        validators=[withdrawal_min_dash_amount_validator],
     )
 
     state = models.PositiveSmallIntegerField(
