@@ -8,6 +8,7 @@ import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
 import HelpBlock from 'react-bootstrap/lib/HelpBlock';
 import Col from 'react-bootstrap/lib/Col';
+import Decimal from 'decimal.js';
 
 export default class DepositDash extends React.Component {
     render() {
@@ -51,11 +52,16 @@ export default class DepositDash extends React.Component {
                             <ControlLabel>Withdrawal Amount:</ControlLabel>
                             <FormControl type="number"
                                          name="dash_to_transfer"
+                                         onInput={this.changeReceiveAmountField}
                                          step="0.00000001"
                                          min="0.00000001"
                                          required/>
                             {this.getFieldError('dash_to_transfer')}
                             <FormControl.Feedback />
+                        </FormGroup>
+                        <FormGroup id="receive-amount-form-group">
+                            <ControlLabel>Receive Amount:</ControlLabel>
+                            <FormControl id="dash_to_receive_input" disabled/>
                         </FormGroup>
                         <Button block type="submit">Start</Button>
                         <HelpBlock>
@@ -103,5 +109,28 @@ export default class DepositDash extends React.Component {
         if (this.hasErrorsField(fieldName)) {
             return "error";
         }
+    }
+
+    changeReceiveAmountField(event) {
+        const $amountField = $(event.target);
+        const $receiveAmountField = $('#dash_to_receive_input');
+        if (!$amountField.val()) {
+            $receiveAmountField.val('');
+            return;
+        }
+
+        Decimal.set({
+            rounding: Decimal.ROUND_DOWN,
+        });
+        let amount = new Decimal($amountField.val());
+        // Truncate amount to 8 decimal places.
+        amount = amount.toDecimalPlaces(8);
+
+        $amountField.val(amount);
+
+        // Set received amount.
+        $.getJSON(urls.getDashReceivedAmount, {'amount': amount.toString()}).done((data) => {
+            $receiveAmountField.val(Decimal(data['received_amount']));
+        });
     }
 }
