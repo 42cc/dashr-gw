@@ -121,6 +121,7 @@ export default class DepositDash extends React.Component {
 
         Decimal.set({
             rounding: Decimal.ROUND_DOWN,
+            toExpNeg: -9,
         });
         let amount = new Decimal($amountField.val());
         // Truncate amount to 8 decimal places.
