@@ -88,10 +88,7 @@ export default class DepositDash extends React.Component {
     }
 
     hasErrorsField(fieldName) {
-        if (this.state && this.state.formErrors[fieldName]) {
-            return true;
-        }
-        return false;
+        return (this.state && this.state.formErrors[fieldName]);
     }
 
     getFieldError(fieldName) {
