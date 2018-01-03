@@ -11,6 +11,13 @@ import Col from 'react-bootstrap/lib/Col';
 import Decimal from 'decimal.js';
 
 export default class DepositDash extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            minWithdrawalAmount: '0.00000001',
+        };
+    }
+
     render() {
         if (this.state && this.state.rippleAddress && this.state.statusUrl) {
             return (
@@ -49,12 +56,14 @@ export default class DepositDash extends React.Component {
                         </FormGroup>
                         <FormGroup controlId="dash_to_transfer_input"
                                    validationState={this.getFieldValidationState('dash_to_transfer')}>
-                            <ControlLabel>Withdrawal Amount:</ControlLabel>
+                            <ControlLabel>
+                                Withdrawal Amount (Min. {this.state.minWithdrawalAmount} DASH):
+                            </ControlLabel>
                             <FormControl type="number"
                                          name="dash_to_transfer"
-                                         onInput={this.changeReceiveAmountField}
+                                         onInput={this.changeReceiveAmountField.bind(this)}
                                          step="0.00000001"
-                                         min="0.00000001"
+                                         min={this.state.minWithdrawalAmount}
                                          required/>
                             {this.getFieldError('dash_to_transfer')}
                             <FormControl.Feedback />
@@ -71,6 +80,10 @@ export default class DepositDash extends React.Component {
                 </Col>
             </Panel>
         );
+    }
+
+    componentDidMount() {
+        window.addEventListener('load', () => {this.setState({minWithdrawalAmount: minAmounts.withdrawal})})
     }
 
     handleFormSubmit(event) {
@@ -94,7 +107,7 @@ export default class DepositDash extends React.Component {
     }
 
     hasErrorsField(fieldName) {
-        return (this.state && this.state.formErrors[fieldName]);
+        return (this.state.formErrors && this.state.formErrors[fieldName]);
     }
 
     getFieldError(fieldName) {
@@ -130,6 +143,10 @@ export default class DepositDash extends React.Component {
         $amountField.val(amount);
 
         // Set received amount.
+        if (amount < Decimal(this.state.minWithdrawalAmount)) {
+            $receiveAmountField.val(0);
+            return;
+        }
         $.getJSON(urls.getDashReceivedAmount, {'amount': amount.toString()}).done((data) => {
             $receiveAmountField.val(Decimal(data['received_amount']));
         });

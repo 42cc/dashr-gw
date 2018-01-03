@@ -49,6 +49,9 @@
                     submitWithdrawal: '{% url 'submit-withdrawal' %}',
                     getDashReceivedAmount: '{% url 'get-dash-received-amount' %}',
                 };
+                var minAmounts = {
+                    withdrawal: '{{ minimal_withdrawal_amount }}',
+                };
             </script>
 			{% block body_js %}{% endblock body_js %}
 		{% endcompress %}
