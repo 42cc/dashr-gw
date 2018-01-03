@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from decimal import Decimal, ROUND_DOWN
+
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import BaseFormView
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -156,3 +158,36 @@ class WithdrawalStatusApiView(View):
                 'stateHistory': transaction.get_state_history(),
             }
         )
+
+
+class GetDashReceivedAmountApiView(View):
+    dash_minimal = Decimal('0.00000001')
+
+    def get(self, request):
+        if 'amount' not in request.GET:
+            return HttpResponseBadRequest()
+
+        received_amount = self.get_received_amount(request.GET['amount'])
+
+        return JsonResponse({'received_amount': received_amount})
+
+    def get_received_amount(self, amount):
+        # Round amount to 8 decimal places.
+        amount = Decimal(amount).quantize(
+            self.dash_minimal,
+            rounding=ROUND_DOWN,
+        )
+
+        gateway_fee = Decimal('0.005')
+        miner_fee = Decimal('0.001')
+
+        # Subtract fees.
+        received_amount = amount * (1 - gateway_fee) - miner_fee
+
+        # Round received amount to 8 decimal places.
+        received_amount = received_amount.quantize(
+            self.dash_minimal,
+            rounding=ROUND_DOWN,
+        )
+
+        return max(received_amount, 0)

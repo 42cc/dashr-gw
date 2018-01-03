@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+from decimal import Decimal
 
 from mock import patch
 
@@ -18,6 +19,7 @@ from apps.core.models import (
     WithdrawalTransaction,
 )
 from apps.core.views import (
+    GetDashReceivedAmountApiView,
     DepositSubmitApiView,
     WithdrawalSubmitApiView,
     DepositStatusApiView,
@@ -242,3 +244,39 @@ class WithdrawalStatusApiViewTest(TestCase):
             cls=DjangoJSONEncoder,
         )
         self.assertEqual(response.content, expected_response_content)
+
+
+class GetDashReceivedAmountApiViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = RequestFactory()
+
+    def test_view_returns_400_without_amount(self):
+        request = self.factory.get('')
+        response = GetDashReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+
+    @patch('apps.core.views.GetDashReceivedAmountApiView.get_received_amount')
+    def test_view_with_amount(self, patched_get_received_amount):
+        patched_get_received_amount.return_value = Decimal(99)
+        request = self.factory.get('', {'amount': 1})
+        response = GetDashReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+        patched_get_received_amount.assert_called_once()
+        self.assertEqual(response.content, '{"received_amount": "99"}')
+
+    def test_get_received_amount(self):
+        get_received_amount = GetDashReceivedAmountApiView(
+        ).get_received_amount
+
+        self.assertEqual(get_received_amount('1'), Decimal('0.994'))
+        self.assertEqual(get_received_amount('1.1'), Decimal('1.0935'))
+        self.assertEqual(get_received_amount('0'), Decimal('0'))
+        self.assertEqual(
+            get_received_amount('1.123456789'),
+            Decimal('1.11683949'),
+        )
+        self.assertEqual(
+            get_received_amount('1.123456784'),
+            Decimal('1.11683949'),
+        )

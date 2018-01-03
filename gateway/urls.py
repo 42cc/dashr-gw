@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from django.contrib import admin
 from apps.core.views import (
+    GetDashReceivedAmountApiView,
     DepositSubmitApiView,
     DepositStatusApiView,
     GetPageDetailsView,
@@ -44,6 +45,11 @@ urlpatterns = [
         GetPageDetailsView.as_view(),
         {'slug': 'status'},
         name='withdrawal-status',
+    ),
+    url(
+        r'^get-dash-received-amount/$',
+        GetDashReceivedAmountApiView.as_view(),
+        name='get-dash-received-amount',
     ),
     url(r'^(?P<slug>[a-z0-9-]+?)/$',
         GetPageDetailsView.as_view(), name='page'),
