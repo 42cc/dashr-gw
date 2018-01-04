@@ -9,11 +9,13 @@ from django.contrib import admin
 
 from .models import (
     DepositTransaction,
+    GatewaySettings,
     Page,
     RippleWalletCredentials,
     WithdrawalTransaction,
 )
 
+admin.register(GatewaySettings)(SingletonModelAdmin)
 admin.site.register(DepositTransaction)
 admin.site.register(WithdrawalTransaction)
 

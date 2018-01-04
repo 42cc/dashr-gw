@@ -7,6 +7,7 @@ from encrypted_fields import EncryptedCharField
 from solo.models import SingletonModel
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import formats
@@ -19,6 +20,33 @@ from apps.core.validators import (
     withdrawal_min_dash_amount_validator,
 )
 from apps.core.wallet import DashWallet
+
+
+class GatewaySettings(SingletonModel):
+    gateway_fee_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name='Gateway fee (percentage)',
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    dash_miner_fee = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        default='0.001',
+        verbose_name='Dash - miner fee',
+        validators=[MinValueValidator(0)],
+    )
+    dash_required_confirmations = models.PositiveIntegerField(
+        default=6,
+        verbose_name='Dash - minimal confirmations',
+    )
+
+    def __str__(self):
+        return 'Gateway Settings'
+
+    class Meta:
+        verbose_name = 'Gateway Settings'
 
 
 class RippleWalletCredentials(SingletonModel):
