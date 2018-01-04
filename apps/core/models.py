@@ -33,7 +33,7 @@ class GatewaySettings(SingletonModel):
     dash_miner_fee = models.DecimalField(
         max_digits=16,
         decimal_places=8,
-        default='0.001',
+        default=Decimal('0.001'),
         verbose_name='Dash - miner fee',
         validators=[MinValueValidator(0)],
     )
