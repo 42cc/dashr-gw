@@ -161,12 +161,15 @@ class DepositTransaction(BaseTransaction):
 
 class WithdrawalTransaction(BaseTransaction):
     STATE_CHOICES = (
-        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.INITIATED,
+            'Initiated. Send {dash_to_transfer} Dash tokens to '
+            '{ripple_address} with a destination tag {destination_tag}',
+        ),
         (
             TransactionStates.CONFIRMED,
-            'Received an incoming transaction '
-            '{incoming_ripple_transaction_hash} ({dash_to_transfer:f} DASH). '
-            'Initiated an outgoing one',
+            'Received ({dash_to_transfer} DASH). Initiated an outgoing '
+            'transaction',
         ),
         (
             TransactionStates.PROCESSED,
@@ -223,6 +226,7 @@ class WithdrawalTransaction(BaseTransaction):
             transaction=instance,
             current_state=instance.get_state_display().format(
                 destination_tag=instance.destination_tag,
+                ripple_address=RippleWalletCredentials.get_solo().address,
                 **instance.__dict__
             ),
         )
