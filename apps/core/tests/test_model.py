@@ -138,6 +138,18 @@ class WithdrawalModelTest(TestCase):
         self.assertTrue(hasattr(transaction, 'destination_tag'))
         self.assertEqual(transaction.destination_tag, transaction.id)
 
+    def test_get_current_state(self):
+        transaction = WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
+        )
+        expected_state = transaction.get_state_display().format(
+            dash_to_transfer='1',
+            ripple_address=RippleWalletCredentials.get_solo().address,
+            destination_tag=transaction.destination_tag,
+        )
+        self.assertEqual(transaction.get_current_state(), expected_state)
+
     def test_state_change_instance_is_created_after_save(self):
         transaction = WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
@@ -148,7 +160,7 @@ class WithdrawalModelTest(TestCase):
         self.assertEqual(last_state_change.transaction_id, transaction.id)
         self.assertEqual(
             last_state_change.current_state,
-            transaction.get_state_display(),
+            transaction.get_current_state(),
         )
 
 

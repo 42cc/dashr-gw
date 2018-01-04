@@ -235,10 +235,7 @@ class WithdrawalStatusApiViewTest(TestCase):
         expected_response_content = json.dumps(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    destination_tag=transaction.destination_tag,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             },
             cls=DjangoJSONEncoder,

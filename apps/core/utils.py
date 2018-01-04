@@ -34,3 +34,10 @@ def get_received_amount_dash(amount):
     )
 
     return max(received_amount, 0)
+
+
+# From https://docs.python.org/2.7/library/decimal.html#decimal-faq
+def remove_exponent(d):
+    if not isinstance(d, Decimal):
+        return d
+    return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()

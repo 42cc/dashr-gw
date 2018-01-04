@@ -12,6 +12,7 @@ from django.db.models.signals import post_save
 from django.utils import formats
 from django.utils.translation import ugettext as _
 
+from apps.core.utils import remove_exponent
 from apps.core.validators import (
     dash_address_validator,
     ripple_address_validator,
@@ -220,15 +221,18 @@ class WithdrawalTransaction(BaseTransaction):
     def destination_tag(self):
         return self.id
 
+    def get_current_state(self):
+        values = self.__dict__
+        values['dash_to_transfer'] = remove_exponent(self.dash_to_transfer)
+        values['destination_tag'] = self.destination_tag
+        values['ripple_address'] = RippleWalletCredentials.get_solo().address
+        return self.get_state_display().format(**values)
+
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
         WithdrawalTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.get_state_display().format(
-                destination_tag=instance.destination_tag,
-                ripple_address=RippleWalletCredentials.get_solo().address,
-                **instance.__dict__
-            ),
+            current_state=instance.get_current_state(),
         )
 
 

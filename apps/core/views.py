@@ -150,11 +150,7 @@ class WithdrawalStatusApiView(View):
         return JsonResponse(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    destination_tag=transaction.destination_tag,
-                    ripple_address=RippleWalletCredentials.get_solo().address,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             }
         )
