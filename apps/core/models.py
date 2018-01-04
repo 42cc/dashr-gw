@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import uuid
+from decimal import Decimal
 
 from encrypted_fields import EncryptedCharField
 from solo.models import SingletonModel
@@ -13,7 +14,6 @@ from django.db.models.signals import post_save
 from django.utils import formats
 from django.utils.translation import ugettext as _
 
-from apps.core.utils import remove_exponent
 from apps.core.validators import (
     dash_address_validator,
     ripple_address_validator,
@@ -107,6 +107,14 @@ class BaseTransaction(models.Model, TransactionStates):
                 ),
             } for state in self.state_changes.order_by('datetime').all()
         ]
+
+    def get_normalized_dash_to_transfer(self):
+        if not isinstance(self.dash_to_transfer, Decimal):
+            return self.dash_to_transfer
+        # Based on https://docs.python.org/2.7/library/decimal.html#decimal-faq
+        if self.dash_to_transfer == self.dash_to_transfer.to_integral():
+            return self.dash_to_transfer.quantize(Decimal(1))
+        return self.dash_to_transfer.normalize()
 
 
 class DepositTransaction(BaseTransaction):
@@ -249,7 +257,7 @@ class WithdrawalTransaction(BaseTransaction):
 
     def get_current_state(self):
         values = self.__dict__
-        values['dash_to_transfer'] = remove_exponent(self.dash_to_transfer)
+        values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
         values['destination_tag'] = self.destination_tag
         values['ripple_address'] = RippleWalletCredentials.get_solo().address
         return self.get_state_display().format(**values)
