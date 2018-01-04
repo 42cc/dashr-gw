@@ -136,18 +136,20 @@ export default class DepositDash extends React.Component {
             rounding: Decimal.ROUND_DOWN,
             toExpNeg: -9,
         });
-        let amount = new Decimal($amountField.val());
+        const amount = new Decimal($amountField.val());
         // Truncate amount to 8 decimal places.
-        amount = amount.toDecimalPlaces(8);
+        const truncatedAmount = amount.toDecimalPlaces(8);
 
-        $amountField.val(amount);
+        if (!amount.equals(truncatedAmount)) {
+            $amountField.val(truncatedAmount);
+        }
 
         // Set received amount.
-        if (amount < Decimal(this.state.minWithdrawalAmount)) {
+        if (truncatedAmount < Decimal(this.state.minWithdrawalAmount)) {
             $receiveAmountField.val(0);
             return;
         }
-        $.getJSON(urls.getDashReceivedAmount, {'amount': amount.toString()}).done((data) => {
+        $.getJSON(urls.getDashReceivedAmount, {'amount': truncatedAmount.toString()}).done((data) => {
             $receiveAmountField.val(Decimal(data['received_amount']));
         });
     }
