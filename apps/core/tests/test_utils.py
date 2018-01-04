@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 
+from apps.core.models import GatewaySettings
 from apps.core.utils import (
     get_minimal_withdrawal_amount,
     get_received_amount_dash,
@@ -9,6 +10,12 @@ from apps.core.utils import (
 
 
 class UtilsTest(TestCase):
+    def setUp(self):
+        GatewaySettings.objects.create(
+            gateway_fee_percent=Decimal('0.5'),
+            dash_miner_fee=Decimal('0.001'),
+        )
+
     def test_get_received_amount(self):
         self.assertEqual(get_received_amount_dash('1'), Decimal('0.994'))
         self.assertEqual(get_received_amount_dash('1.1'), Decimal('1.0935'))
