@@ -239,10 +239,6 @@ class WithdrawalTransaction(BaseTransaction):
         choices=STATE_CHOICES,
     )
 
-    incoming_ripple_transaction_hash = models.CharField(
-        max_length=64,
-        blank=True,
-    )
     outgoing_dash_transaction_hash = models.CharField(
         max_length=64,
         blank=True,
