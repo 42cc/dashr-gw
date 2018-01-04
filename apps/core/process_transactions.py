@@ -35,7 +35,7 @@ def process_dash_to_ripple(cursor, dash_wallet):
     ).fetchall()
     if not dash2ripple_transactions:
         logger.info('Found no Dash to Ripple transactions.')
-    ripple_credentials = RippleWalletCredentials.objects.get()
+    ripple_credentials = RippleWalletCredentials.get_solo()
     for transaction in dash2ripple_transactions:
         balance = dash_wallet.get_address_balance(transaction[2])
         if balance:
@@ -69,9 +69,7 @@ def process_ripple_to_dash(cursor, dash_wallet):
     if not ripple2dash_transactions:
         logger.info('Found no Ripple to Dash transactions.')
         return
-    ripple_address = RippleWalletCredentials.objects.only(
-        'address',
-    ).get().address
+    ripple_address = RippleWalletCredentials.get_solo().address
     for transaction in ripple2dash_transactions:
         transaction_obj = RippleTransaction.objects.filter(
             destination=ripple_address,

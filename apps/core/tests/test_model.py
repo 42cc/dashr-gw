@@ -174,14 +174,14 @@ class RippleWalletCredentialsModelTest(TestCase):
     def test_has_address(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'address'))
         self.assertIsInstance(
-            RippleWalletCredentials.objects.get().address,
+            RippleWalletCredentials.get_solo().address,
             unicode,
         )
 
     def test_has_secret(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'secret'))
         self.assertIsInstance(
-            RippleWalletCredentials.objects.get().secret,
+            RippleWalletCredentials.get_solo().secret,
             unicode,
         )
         self.assertIsInstance(

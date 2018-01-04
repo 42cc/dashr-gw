@@ -95,9 +95,7 @@ class WithdrawalSubmitApiView(BaseFormView):
             (transaction.id,),
             countdown=30,
         )
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         return JsonResponse(
             {
                 'success': True,
@@ -124,9 +122,7 @@ class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
         transaction = get_object_or_404(DepositTransaction, id=transaction_id)
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         return JsonResponse(
             {
                 'transactionId': transaction.id,

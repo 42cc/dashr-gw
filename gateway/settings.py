@@ -261,6 +261,8 @@ LOGGING = {
 
 ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'fieldkeys')
 
+SOLO_CACHE = 'default'
+
 # Try to load settings from ``settings_local.py`` file
 try:
     from settings_local import *  # NOQA

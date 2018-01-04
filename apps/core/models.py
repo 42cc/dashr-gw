@@ -147,9 +147,7 @@ class DepositTransaction(BaseTransaction):
 
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         DepositTransactionStateChange.objects.create(
             transaction=instance,
             current_state=instance.get_state_display().format(

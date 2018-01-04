@@ -22,9 +22,7 @@ logger = logging.getLogger(__file__)
 
 @celery_app.task
 def monitor_transactions_task():
-    ripple_address = models.RippleWalletCredentials.objects.only(
-        'address',
-    ).get().address
+    ripple_address = models.RippleWalletCredentials.get_solo().address
     monitor_transactions(ripple_address)
 
 
@@ -129,7 +127,7 @@ def send_ripple_transaction(transaction_id):
 
     dash_transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
-    ripple_credentials = models.RippleWalletCredentials.objects.get()
+    ripple_credentials = models.RippleWalletCredentials.get_solo()
 
     minimal_trust_limit = (
         dash_transaction.dash_to_transfer +
@@ -208,9 +206,7 @@ def monitor_ripple_to_dash_transaction(transaction_id):
     logger.info('Withdrawal {}. Monitoring'.format(transaction_id))
     transaction = models.WithdrawalTransaction.objects.get(id=transaction_id)
 
-    ripple_gateway_address = models.RippleWalletCredentials.objects.only(
-        'address',
-    ).get().address
+    ripple_gateway_address = models.RippleWalletCredentials.get_solo().address
 
     ripple_transaction = RippleTransaction.objects.filter(
         destination_tag=transaction.destination_tag,

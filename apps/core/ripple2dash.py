@@ -49,9 +49,7 @@ def create_transaction(dash_address):
             ),
         )
 
-    ripple_address = RippleWalletCredentials.objects.only(
-        'address',
-    ).get().address
+    ripple_address = RippleWalletCredentials.get_solo().address
 
     return ripple_address, cursor.lastrowid
 
