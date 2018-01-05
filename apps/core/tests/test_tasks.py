@@ -23,6 +23,7 @@ class CeleryTransactionBaseTaskTest(TestCase):
         )
         transaction = models.DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
         )
         task = tasks.CeleryTransactionBaseTask()
         task.on_failure(None, None, (transaction.id,), None, None)
@@ -32,6 +33,7 @@ class CeleryTransactionBaseTaskTest(TestCase):
     def test_task_on_failure_with_withdrawal(self):
         transaction = models.WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
         )
         task = tasks.CeleryTransactionBaseTask()
         task.on_failure(None, None, (transaction.id,), None, None)
@@ -311,6 +313,7 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
         self.ripple_credentials = models.RippleWalletCredentials.get_solo()
         self.transaction = models.WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
         )
 
     def create_ripple_transaction(self):
@@ -324,18 +327,19 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
         )
 
     def test_modifies_transaction_if_ripple_transaction_exists(self):
-        ripple_transaction = self.create_ripple_transaction()
+        self.create_ripple_transaction()
         tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
-        self.assertEqual(
-            self.transaction.incoming_ripple_transaction_hash,
-            ripple_transaction.hash,
-        )
-        self.assertEqual(
-            self.transaction.dash_to_transfer,
-            float(ripple_transaction.value),
-        )
+
+    def test_checks_amount_of_all_transactions_with_destination_tag(self):
+        self.transaction.dash_to_transfer = 2
+        self.transaction.save()
+        self.create_ripple_transaction()
+        self.create_ripple_transaction()
+        tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
 
     @patch('apps.core.tasks.send_dash_transaction.delay')
     def test_launches_send_dash_transaction_if_balance_positive(

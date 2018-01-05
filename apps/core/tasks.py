@@ -1,6 +1,5 @@
 import logging
 import socket
-from decimal import Decimal
 
 import celery
 import six
@@ -11,6 +10,8 @@ from ripple_api.ripple_api import balance as get_ripple_balance, is_trust_set
 from ripple_api.tasks import sign_task, submit_task
 
 from django.conf import settings
+from django.db.models import Sum, DecimalField
+from django.db.models.functions import Cast
 from django.db.utils import DatabaseError
 from django.utils.timezone import now, timedelta
 
@@ -208,33 +209,37 @@ def monitor_ripple_to_dash_transaction(transaction_id):
 
     ripple_gateway_address = models.RippleWalletCredentials.get_solo().address
 
-    ripple_transaction = RippleTransaction.objects.filter(
+    ripple_transactions_balance = RippleTransaction.objects.filter(
         destination_tag=transaction.destination_tag,
         currency='DSH',
         issuer=ripple_gateway_address,
         status=RippleTransaction.RECEIVED,
-    ).first()
+    ).annotate(
+        value_decimal=Cast(
+            'value',
+            DecimalField(max_digits=182, decimal_places=96),
+        ),
+    ).aggregate(Sum('value_decimal'))['value_decimal__sum']
 
-    if ripple_transaction is not None:
+    if ripple_transactions_balance is not None:
+        ripple_transactions_balance = ripple_transactions_balance.normalize()
         logger.info(
-            'Deposit {}. Received a Ripple transaction {} ({} DSH)'.format(
+            'Withdrawal {}. Received {} of {} DSH'.format(
                 transaction_id,
-                ripple_transaction.hash,
-                ripple_transaction.value,
+                ripple_transactions_balance,
+                transaction.get_normalized_dash_to_transfer(),
             ),
         )
+        if ripple_transactions_balance >= transaction.dash_to_transfer:
+            transaction.state = transaction.CONFIRMED
+            transaction.save(update_fields=('state',))
+            send_dash_transaction.delay(transaction_id)
+            return
+    else:
+        logger.info(
+            'Withdrawal {}. No transaction found yet'.format(transaction_id),
+        )
 
-        transaction.state = transaction.CONFIRMED
-        transaction.incoming_ripple_transaction_hash = ripple_transaction.hash
-        transaction.dash_to_transfer = Decimal(ripple_transaction.value)
-        transaction.save()
-
-        send_dash_transaction.delay(transaction_id)
-        return
-
-    logger.info(
-        'Withdrawal {}. No transaction found yet'.format(transaction_id),
-    )
     if transaction.timestamp + timedelta(
         minutes=settings.TRANSACTION_OVERDUE_MINUTES,
     ) < now():
