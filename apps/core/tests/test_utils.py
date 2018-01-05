@@ -13,7 +13,7 @@ class UtilsTest(TestCase):
     def setUp(self):
         GatewaySettings.objects.create(
             gateway_fee_percent=Decimal('0.5'),
-            dash_miner_fee=Decimal('0.001'),
+            max_dash_miner_fee=Decimal('0.001'),
         )
 
     def test_get_received_amount(self):

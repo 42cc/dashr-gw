@@ -30,11 +30,16 @@ class GatewaySettings(SingletonModel):
         verbose_name='Gateway fee (percentage)',
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
-    dash_miner_fee = models.DecimalField(
+    max_dash_miner_fee = models.DecimalField(
         max_digits=16,
         decimal_places=8,
-        default=Decimal('0.001'),
-        verbose_name='Dash - miner fee',
+        default=Decimal('0.1'),
+        verbose_name='Dash - maximal miner fee',
+        help_text=(
+            'This value is used to calculate amount that is sent in '
+            'withdrawal transactions. <b>It should be the same as <code>'
+            'maxtxfee</code> of your Dash node.</b>'
+        ),
         validators=[MinValueValidator(0)],
     )
     dash_required_confirmations = models.PositiveIntegerField(
