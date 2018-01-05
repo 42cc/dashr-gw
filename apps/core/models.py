@@ -203,7 +203,7 @@ class WithdrawalTransaction(BaseTransaction):
         ),
         (
             TransactionStates.CONFIRMED,
-            'Received ({dash_to_transfer} DASH). Initiated an outgoing '
+            'Received {dash_to_transfer} Dash tokens. Initiated an outgoing '
             'transaction',
         ),
         (
@@ -213,8 +213,8 @@ class WithdrawalTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            'Received 0 Ripple transactions. Transactions with the '
-            'destination tag {destination_tag} are no longer tracked',
+            'Time expired. Transactions with the destination tag '
+            '{destination_tag} are no longer tracked',
         ),
         (
             TransactionStates.FAILED,
