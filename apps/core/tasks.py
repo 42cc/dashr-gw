@@ -15,7 +15,7 @@ from django.db.models.functions import Cast
 from django.db.utils import DatabaseError
 from django.utils.timezone import now, timedelta
 
-from apps.core import models, wallet
+from apps.core import models, utils, wallet
 from gateway import celery_app
 
 logger = logging.getLogger(__file__)
@@ -256,4 +256,24 @@ def monitor_ripple_to_dash_transaction(transaction_id):
 
 @celery_transaction_task
 def send_dash_transaction(transaction_id):
-    pass
+    logger.info(
+        'Withdrawal {}. Sending Dash transaction'.format(transaction_id),
+    )
+
+    transaction = models.WithdrawalTransaction.objects.get(id=transaction_id)
+
+    dash_wallet = wallet.DashWallet()
+    dash_transaction_hash = dash_wallet.send_to_address(
+        transaction.dash_address,
+        utils.get_received_amount_dash(transaction.dash_to_transfer),
+    )
+
+    logger.info(
+        'Withdrawal {}. Processed. Dash transaction {}'.format(
+            transaction_id,
+            dash_transaction_hash,
+        ),
+    )
+    transaction.outgoing_dash_transaction_hash = dash_transaction_hash
+    transaction.state = transaction.PROCESSED
+    transaction.save()

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db.utils import OperationalError
 from django.test import TestCase
 
-from apps.core import models, tasks
+from apps.core import models, tasks, utils
 from gateway import celery_app
 
 
@@ -376,3 +376,30 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
     ):
         tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
         patched_retry.assert_called_once()
+
+
+class SendDashTransactionTaskTest(TestCase):
+    def setUp(self):
+        celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        self.transaction = models.WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
+        )
+
+    @patch('apps.core.tasks.wallet.DashWallet.send_to_address')
+    def test_sends_dash_and_marks_transaction_as_processed(
+        self,
+        patched_send_to_address,
+    ):
+        patched_send_to_address.return_value = 'hash'
+        tasks.send_dash_transaction.apply((self.transaction.id,))
+        patched_send_to_address.assert_called_with(
+            self.transaction.dash_address,
+            utils.get_received_amount_dash(self.transaction.dash_to_transfer),
+        )
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.PROCESSED)
+        self.assertEqual(
+            self.transaction.outgoing_dash_transaction_hash,
+            patched_send_to_address.return_value,
+        )
