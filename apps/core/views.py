@@ -80,7 +80,7 @@ class DepositSubmitApiView(BaseFormView):
         return JsonResponse(
             {
                 'success': False,
-                'ripple_address_error': form.errors['ripple_address'][0],
+                'form_errors': form.errors,
             },
         )
 

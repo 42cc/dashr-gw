@@ -119,11 +119,14 @@ class DepositSubmitApiViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
         self.assertIn('success', response_content)
-        self.assertIn('ripple_address_error', response_content)
+        self.assertIn('form_errors', response_content)
         self.assertEqual(response_content['success'], False)
         self.assertEqual(
-            response_content['ripple_address_error'],
-            'The Ripple address is not valid.',
+            response_content['form_errors'],
+            {
+                'ripple_address': ['The Ripple address is not valid.'],
+                'dash_to_transfer': ['This field is required.'],
+            },
         )
 
 
