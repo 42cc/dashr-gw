@@ -395,7 +395,10 @@ class SendDashTransactionTaskTest(TestCase):
         tasks.send_dash_transaction.apply((self.transaction.id,))
         patched_send_to_address.assert_called_with(
             self.transaction.dash_address,
-            utils.get_received_amount_dash(self.transaction.dash_to_transfer),
+            utils.get_received_amount(
+                self.transaction.dash_to_transfer,
+                'withdrawal',
+            ),
         )
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.state, self.transaction.PROCESSED)

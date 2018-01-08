@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .utils import get_received_amount_dash
+from .utils import get_received_amount
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import (
     DepositTransaction,
@@ -159,7 +159,10 @@ class GetDashReceivedAmountApiView(View):
             return HttpResponseBadRequest()
 
         try:
-            received_amount = get_received_amount_dash(request.GET['amount'])
+            received_amount = get_received_amount(
+                request.GET['amount'],
+                'withdrawal',
+            )
         except ArithmeticError:
             return HttpResponseBadRequest()
 

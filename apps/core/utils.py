@@ -29,7 +29,7 @@ def get_minimal_withdrawal_amount():
     return minimal_amount
 
 
-def get_received_amount_dash(amount):
+def get_received_amount(amount, transaction_type):
     # Round amount to 8 decimal places.
     amount = Decimal(amount).quantize(
         dash_minimal,
@@ -40,9 +40,9 @@ def get_received_amount_dash(amount):
     gateway_fee = gateway_settings.gateway_fee_percent / 100
 
     # Subtract fees.
-    received_amount = (
-        amount * (1 - gateway_fee) - gateway_settings.max_dash_miner_fee
-    )
+    received_amount = amount * (1 - gateway_fee)
+    if transaction_type == 'withdrawal':
+        received_amount -= gateway_settings.max_dash_miner_fee
 
     # Round received amount to 8 decimal places.
     received_amount = received_amount.quantize(

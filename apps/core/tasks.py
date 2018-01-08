@@ -265,7 +265,7 @@ def send_dash_transaction(transaction_id):
     dash_wallet = wallet.DashWallet()
     dash_transaction_hash = dash_wallet.send_to_address(
         transaction.dash_address,
-        utils.get_received_amount_dash(transaction.dash_to_transfer),
+        utils.get_received_amount(transaction.dash_to_transfer, 'withdrawal'),
     )
 
     logger.info(

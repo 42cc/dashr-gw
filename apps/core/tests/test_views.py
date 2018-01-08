@@ -258,11 +258,11 @@ class GetDashReceivedAmountApiViewTest(TestCase):
         response = GetDashReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 400)
 
-    @patch('apps.core.views.get_received_amount_dash')
-    def test_view_with_amount(self, patched_get_received_amount_dash):
-        patched_get_received_amount_dash.return_value = Decimal(99)
+    @patch('apps.core.views.get_received_amount')
+    def test_view_with_amount(self, patched_get_received_amount):
+        patched_get_received_amount.return_value = Decimal(99)
         request = self.factory.get('', {'amount': 1})
         response = GetDashReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 200)
-        patched_get_received_amount_dash.assert_called_once()
+        patched_get_received_amount.assert_called_once()
         self.assertEqual(response.content, '{"received_amount": "99"}')
