@@ -205,11 +205,7 @@ class DepositStatusApiViewTest(TestCase):
         expected_response_content = json.dumps(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=ripple_address,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             },
             cls=DjangoJSONEncoder,

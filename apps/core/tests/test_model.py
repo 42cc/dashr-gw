@@ -88,6 +88,12 @@ class DepositModelTest(TestCase):
     def test_dash_address_is_automatically_set(self):
         self.assertEqual(self.transaction.dash_address, self.dash_address)
 
+    def test_get_current_state(self):
+        expected_state = self.transaction.get_state_display().format(
+            **self.transaction.__dict__
+        )
+        self.assertEqual(self.transaction.get_current_state(), expected_state)
+
     @patch('apps.core.models.DashWallet.get_new_address')
     def test_dash_address_is_not_changed_on_model_save(
         self,

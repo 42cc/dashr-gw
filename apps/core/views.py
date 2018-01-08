@@ -122,15 +122,10 @@ class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
         transaction = get_object_or_404(DepositTransaction, id=transaction_id)
-        ripple_address = RippleWalletCredentials.get_solo().address
         return JsonResponse(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=ripple_address,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             }
         )

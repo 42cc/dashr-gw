@@ -186,16 +186,22 @@ class DepositTransaction(BaseTransaction):
             self.dash_address = dash_wallet.get_new_address()
         super(DepositTransaction, self).save(*args, **kwargs)
 
+    def get_current_state(self):
+        values = self.__dict__
+        values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
+        values['confirmations_number'] = (
+            GatewaySettings.get_solo().dash_required_confirmations
+        )
+        values['gateway_ripple_address'] = (
+            RippleWalletCredentials.get_solo().address
+        )
+        return self.get_state_display().format(**values)
+
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
-        ripple_address = RippleWalletCredentials.get_solo().address
         DepositTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.get_state_display().format(
-                confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                gateway_ripple_address=ripple_address,
-                **instance.__dict__
-            ),
+            current_state=instance.get_current_state(),
         )
 
 
