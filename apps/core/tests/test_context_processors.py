@@ -1,9 +1,7 @@
 from django.test import RequestFactory, TestCase
 
 from apps.core import context_processors
-from apps.core.utils import (
-    get_minimal_withdrawal_amount,
-)
+from apps.core.utils import get_minimal_transaction_amount
 
 
 class ContextProcessorsTest(TestCase):
@@ -13,7 +11,7 @@ class ContextProcessorsTest(TestCase):
         self.assertIn('minimal_withdrawal_amount', context)
         self.assertEqual(
             context['minimal_withdrawal_amount'],
-            get_minimal_withdrawal_amount(),
+            get_minimal_transaction_amount('withdrawal'),
         )
         ajax_request = RequestFactory().get(
             '',
