@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from apps.core.models import GatewaySettings
 from apps.core.utils import (
+    get_minimal_deposit_amount,
     get_minimal_withdrawal_amount,
     get_received_amount_dash,
 )
@@ -27,6 +28,12 @@ class UtilsTest(TestCase):
         self.assertEqual(
             get_received_amount_dash('1.123456784'),
             Decimal('1.11683949'),
+        )
+
+    def test_get_minimal_deposit_amount(self):
+        self.assertEqual(
+            get_minimal_deposit_amount(),
+            Decimal('0.00000002'),
         )
 
     def test_get_minimal_withdrawal_amount(self):
