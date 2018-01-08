@@ -50,6 +50,7 @@
                     getReceivedAmount: '{% url 'get-received-amount' %}',
                 };
                 var minAmounts = {
+                    deposit: '{{ minimal_deposit_amount }}',
                     withdrawal: '{{ minimal_withdrawal_amount }}',
                 };
             </script>

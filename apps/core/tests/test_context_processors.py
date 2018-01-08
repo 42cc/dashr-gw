@@ -8,6 +8,11 @@ class ContextProcessorsTest(TestCase):
     def test_minimal_amounts(self):
         request = RequestFactory().get('')
         context = context_processors.minimal_amounts(request)
+        self.assertIn('minimal_deposit_amount', context)
+        self.assertEqual(
+            context['minimal_deposit_amount'],
+            get_minimal_transaction_amount('deposit'),
+        )
         self.assertIn('minimal_withdrawal_amount', context)
         self.assertEqual(
             context['minimal_withdrawal_amount'],
