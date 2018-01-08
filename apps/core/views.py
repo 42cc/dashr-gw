@@ -118,10 +118,9 @@ class WithdrawalSubmitApiView(BaseFormView):
         )
 
 
-class DepositStatusApiView(View):
-    @staticmethod
-    def get(request, transaction_id):
-        transaction = get_object_or_404(DepositTransaction, id=transaction_id)
+class BaseStatusApiView(View):
+    def get(self, request, transaction_id):
+        transaction = get_object_or_404(self.model, id=transaction_id)
         return JsonResponse(
             {
                 'transactionId': transaction.id,
@@ -131,20 +130,12 @@ class DepositStatusApiView(View):
         )
 
 
-class WithdrawalStatusApiView(View):
-    @staticmethod
-    def get(request, transaction_id):
-        transaction = get_object_or_404(
-            WithdrawalTransaction,
-            id=transaction_id,
-        )
-        return JsonResponse(
-            {
-                'transactionId': transaction.id,
-                'state': transaction.get_current_state(),
-                'stateHistory': transaction.get_state_history(),
-            }
-        )
+class DepositStatusApiView(BaseStatusApiView):
+    model = DepositTransaction
+
+
+class WithdrawalStatusApiView(BaseStatusApiView):
+    model = WithdrawalTransaction
 
 
 class GetReceivedAmountApiView(View):
