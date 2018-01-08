@@ -152,16 +152,20 @@ class WithdrawalStatusApiView(View):
         )
 
 
-class GetDashReceivedAmountApiView(View):
+class GetReceivedAmountApiView(View):
     @staticmethod
     def get(request):
-        if 'amount' not in request.GET:
+        if (
+            'amount' not in request.GET or
+            'transaction_type' not in request.GET or
+            request.GET['transaction_type'] not in ('deposit', 'withdrawal')
+        ):
             return HttpResponseBadRequest()
 
         try:
             received_amount = get_received_amount(
                 request.GET['amount'],
-                'withdrawal',
+                request.GET['transaction_type'],
             )
         except ArithmeticError:
             return HttpResponseBadRequest()

@@ -19,7 +19,7 @@ from apps.core.models import (
     WithdrawalTransaction,
 )
 from apps.core.views import (
-    GetDashReceivedAmountApiView,
+    GetReceivedAmountApiView,
     DepositSubmitApiView,
     WithdrawalSubmitApiView,
     DepositStatusApiView,
@@ -243,26 +243,43 @@ class WithdrawalStatusApiViewTest(TestCase):
         self.assertEqual(response.content, expected_response_content)
 
 
-class GetDashReceivedAmountApiViewTest(TestCase):
+class GetReceivedAmountApiViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.factory = RequestFactory()
 
     def test_view_returns_400_without_amount(self):
         request = self.factory.get('')
-        response = GetDashReceivedAmountApiView.as_view()(request)
+        response = GetReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_view_returns_400_without_transaction_type(self):
+        request = self.factory.get('', {'transaction_type': 'deposit'})
+        response = GetReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_view_returns_400_with_invalid_transaction_type(self):
+        request = self.factory.get('', {'transaction_type': 'undefined'})
+        response = GetReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 400)
 
     def test_view_returns_400_with_invalid_amount(self):
         request = self.factory.get('', {'amount': '9.9.9'})
-        response = GetDashReceivedAmountApiView.as_view()(request)
+        response = GetReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 400)
 
     @patch('apps.core.views.get_received_amount')
     def test_view_with_amount(self, patched_get_received_amount):
         patched_get_received_amount.return_value = Decimal(99)
-        request = self.factory.get('', {'amount': 1})
-        response = GetDashReceivedAmountApiView.as_view()(request)
-        self.assertEqual(response.status_code, 200)
-        patched_get_received_amount.assert_called_once()
-        self.assertEqual(response.content, '{"received_amount": "99"}')
+        for transaction_type in ('deposit', 'withdrawal'):
+            request = self.factory.get(
+                '',
+                {'amount': 1, 'transaction_type': transaction_type},
+            )
+            response = GetReceivedAmountApiView.as_view()(request)
+            patched_get_received_amount.assert_called_with(
+                '1',
+                transaction_type,
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, '{"received_amount": "99"}')

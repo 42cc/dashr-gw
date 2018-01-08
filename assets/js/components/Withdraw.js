@@ -149,7 +149,10 @@ export default class DepositDash extends React.Component {
             $receiveAmountField.val(0);
             return;
         }
-        $.getJSON(urls.getDashReceivedAmount, {'amount': truncatedAmount.toString()}).done((data) => {
+        $.getJSON(
+            urls.getReceivedAmount,
+            {'amount': truncatedAmount.toString(), 'transaction_type': 'withdrawal'},
+        ).done((data) => {
             $receiveAmountField.val(Decimal(data['received_amount']));
         });
     }
