@@ -62,5 +62,7 @@ export default class Status extends React.Component {
         )
           .done(data => { this.setState({transactionData: data}); })
           .fail(() => { this.setState({transactionDoesNotExists: true}); });
+        // Update data every 10 seconds.
+        setTimeout(this.getTransactionData.bind(this), 10000);
     }
 }
