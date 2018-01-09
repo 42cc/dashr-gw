@@ -112,7 +112,7 @@ class DepositModelTest(TestCase):
         self.assertEqual(last_state_change.transaction_id, self.transaction.id)
         self.assertEqual(
             last_state_change.current_state,
-            self.transaction.get_state_display(),
+            self.transaction.get_current_state(),
         )
 
     def test_get_state_history(self):

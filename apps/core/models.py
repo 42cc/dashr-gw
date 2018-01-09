@@ -124,16 +124,19 @@ class BaseTransaction(models.Model, TransactionStates):
 
 class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
-        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.INITIATED,
+            'Initiated. Send {dash_to_transfer} DASH to {dash_address}',
+        ),
         (
             TransactionStates.UNCONFIRMED,
-            'Received an incoming transaction ({dash_to_transfer:f} DASH). '
-            'Waiting for {confirmations_number} confirmations',
+            'Received {dash_to_transfer} DASH. Waiting for '
+            '{confirmations_number} confirmations',
         ),
         (
             TransactionStates.CONFIRMED,
-            'Confirmed the incoming transaction ({dash_to_transfer:f} DASH). '
-            'Initiated an outgoing one',
+            'Confirmed receiving {dash_to_transfer} DASH. Initiated an '
+            'outgoing transaction',
         ),
         (
             TransactionStates.PROCESSED,
@@ -142,8 +145,8 @@ class DepositTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            'Received 0 Dash transactions. Transactions to the address '
-            '{dash_address} are no longer tracked',
+            'Time expired. Transactions to {dash_address} are no longer '
+            'tracked',
         ),
         (
             TransactionStates.FAILED,
