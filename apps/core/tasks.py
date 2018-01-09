@@ -166,7 +166,12 @@ def send_ripple_transaction(transaction_id):
         account=ripple_credentials.address,
         destination=dash_transaction.ripple_address,
         currency='DSH',
-        value='{0:f}'.format(dash_transaction.dash_to_transfer),
+        value='{0:f}'.format(
+            utils.get_received_amount(
+                dash_transaction.get_normalized_dash_to_transfer(),
+                'deposit',
+            ),
+        ),
     )
 
     sign_task(new_ripple_transaction.pk, ripple_credentials.secret)
