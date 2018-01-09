@@ -9,7 +9,6 @@ from ripple_api.models import Transaction as RippleTransaction
 from ripple_api.ripple_api import balance as get_ripple_balance, is_trust_set
 from ripple_api.tasks import sign_task, submit_task
 
-from django.conf import settings
 from django.db.models import Sum, DecimalField
 from django.db.models.functions import Cast
 from django.db.utils import DatabaseError

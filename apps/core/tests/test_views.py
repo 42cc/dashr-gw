@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from mock import patch
 
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse

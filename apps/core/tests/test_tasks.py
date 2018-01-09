@@ -4,7 +4,6 @@ from datetime import timedelta
 from mock import patch
 from ripple_api.models import Transaction as RippleTransaction
 
-from django.conf import settings
 from django.db.utils import OperationalError
 from django.test import TestCase
 
