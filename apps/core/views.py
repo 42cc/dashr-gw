@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import BaseFormView
@@ -16,7 +15,6 @@ from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import (
     DepositTransaction,
     Page,
-    RippleWalletCredentials,
     WithdrawalTransaction,
 )
 from .tasks import (
