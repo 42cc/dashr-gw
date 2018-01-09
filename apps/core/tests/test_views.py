@@ -107,21 +107,15 @@ class DepositSubmitApiViewTest(TestCase):
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
-        self.assertIn('dash_wallet', response_content)
-        self.assertIn('dash_to_transfer', response_content)
         self.assertIn('status_url', response_content)
-        self.assertEqual(response_content['success'], True)
 
     def test_view_with_invalid_form(self):
         request = self.factory.post('', {'ripple_address': 'Invalid address'})
         response = DepositSubmitApiView.as_view()(request)
         self.assertIsInstance(response, JsonResponse)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
         self.assertIn('form_errors', response_content)
-        self.assertEqual(response_content['success'], False)
         self.assertEqual(
             response_content['form_errors'],
             {
@@ -159,12 +153,7 @@ class WithdrawalSubmitApiViewTest(TestCase):
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
-        self.assertIn('ripple_address', response_content)
-        self.assertIn('destination_tag', response_content)
-        self.assertIn('dash_to_transfer', response_content)
         self.assertIn('status_url', response_content)
-        self.assertEqual(response_content['success'], True)
 
     @patch('apps.core.models.DashWallet.check_address_valid')
     def test_view_with_invalid_form(self, patched_check_address_valid):
@@ -172,11 +161,9 @@ class WithdrawalSubmitApiViewTest(TestCase):
         request = self.factory.post('', {'dash_address': 'Invalid address'})
         response = WithdrawalSubmitApiView.as_view()(request)
         self.assertIsInstance(response, JsonResponse)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
         self.assertIn('form_errors', response_content)
-        self.assertEqual(response_content['success'], False)
         self.assertEqual(
             response_content['form_errors'],
             {

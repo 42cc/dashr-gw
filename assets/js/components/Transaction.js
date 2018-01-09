@@ -16,6 +16,21 @@ export default class Transaction extends React.Component {
         })
     }
 
+    handleFormSubmit(event) {
+        event.preventDefault();
+        $('button[type="submit"]').prop('disabled', true);
+        $.post(
+            urls.submit[this.transactionType],
+            $('#transaction-form').serialize(),
+        ).done(data => {
+            this.setState({statusUrl: data['status_url']});
+        }).fail(xhr => {
+            if (xhr.status === 400) {
+                this.setState({formErrors: xhr.responseJSON['form_errors']});
+            }
+        }).always(() => {$('button[type="submit"]').prop('disabled', false);})
+    }
+
     hasErrorsField(fieldName) {
         return (this.state.formErrors && this.state.formErrors[fieldName]);
     }

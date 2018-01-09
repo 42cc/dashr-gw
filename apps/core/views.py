@@ -55,68 +55,35 @@ class GetPageDetailsView(View):
         return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
-class DepositSubmitApiView(BaseFormView):
+class BaseSubmitApiView(BaseFormView):
+    http_method_names = ('post', 'put')
+
+    def form_valid(self, form):
+        transaction = form.save()
+        self.monitor_task.apply_async((transaction.id,), countdown=30)
+        return JsonResponse(
+            {
+                'status_url': reverse(
+                    self.status_urlpattern_name,
+                    args=(transaction.id,),
+                ),
+            },
+        )
+
+    def form_invalid(self, form):
+        return JsonResponse({'form_errors': form.errors}, status=400)
+
+
+class DepositSubmitApiView(BaseSubmitApiView):
     form_class = DepositTransactionModelForm
-    http_method_names = ('post', 'put')
-
-    def form_valid(self, form):
-        transaction = form.save()
-        monitor_dash_to_ripple_transaction.apply_async(
-            (transaction.id,),
-            countdown=30,
-        )
-        return JsonResponse(
-            {
-                'success': True,
-                'dash_wallet': transaction.dash_address,
-                'dash_to_transfer': transaction.dash_to_transfer,
-                'status_url': reverse(
-                    'deposit-status',
-                    args=(transaction.id,),
-                ),
-            },
-        )
-
-    def form_invalid(self, form):
-        return JsonResponse(
-            {
-                'success': False,
-                'form_errors': form.errors,
-            },
-        )
+    monitor_task = monitor_dash_to_ripple_transaction
+    status_urlpattern_name = 'deposit-status'
 
 
-class WithdrawalSubmitApiView(BaseFormView):
+class WithdrawalSubmitApiView(BaseSubmitApiView):
     form_class = WithdrawalTransactionModelForm
-    http_method_names = ('post', 'put')
-
-    def form_valid(self, form):
-        transaction = form.save()
-        monitor_ripple_to_dash_transaction.apply_async(
-            (transaction.id,),
-            countdown=30,
-        )
-        ripple_address = RippleWalletCredentials.get_solo().address
-        return JsonResponse(
-            {
-                'success': True,
-                'ripple_address': ripple_address,
-                'destination_tag': transaction.destination_tag,
-                'dash_to_transfer': transaction.dash_to_transfer,
-                'status_url': reverse(
-                    'withdrawal-status',
-                    args=(transaction.id,),
-                ),
-            },
-        )
-
-    def form_invalid(self, form):
-        return JsonResponse(
-            {
-                'success': False,
-                'form_errors': form.errors,
-            },
-        )
+    monitor_task = monitor_ripple_to_dash_transaction
+    status_urlpattern_name = 'withdrawal-status'
 
 
 class BaseStatusApiView(View):

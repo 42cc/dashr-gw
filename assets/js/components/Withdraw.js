@@ -1,4 +1,5 @@
 import React from "react";
+import { Redirect } from "react-router";
 import DjangoCSRFToken from 'django-react-csrftoken';
 import Button from 'react-bootstrap/lib/Button';
 import Panel from 'react-bootstrap/lib/Panel';
@@ -18,32 +19,14 @@ export default class Withdrawal extends Transaction {
     }
 
     render() {
-        if (this.state && this.state.rippleAddress && this.state.statusUrl) {
-            return (
-                <Panel bsStyle="default" className="panel-wrapper panel-wrapper-container">
-                    <Col sm={12} md={6}>
-                        <b>You have initiated a transaction from Ripple to Dash</b>
-                        <p>
-                            <span>Please transfer </span>
-                            <b>{this.state.dashToTransfer} </b>
-                            <span>Ripple token{this.state.dashToTransfer == 1 ? null : 's'} with a destination tag </span>
-                            <b>{this.state.destinationTag} </b>
-                            <span>to this address: </span>
-                            <b>{this.state.rippleAddress} </b>
-                        </p>
-                        <p>
-                            <span>You can track status of this transaction </span>
-                            <a href={this.state.statusUrl}>here</a>.
-                        </p>
-                    </Col>
-                </Panel>
-            )
+        if (this.state && this.state.statusUrl) {
+            return <Redirect to={this.state.statusUrl} />;
         }
         return (
             <Panel header="Withdraw DASH from Ripple" bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={6}>
-                    <Form onSubmit={this.handleFormSubmit.bind(this)} id="withdrawal-form">
+                    <Form onSubmit={this.handleFormSubmit.bind(this)} id="transaction-form">
                         <DjangoCSRFToken/>
                         <FormGroup controlId="dash_address_input"
                                    validationState={this.getFieldValidationState('dash_address')}>
@@ -78,25 +61,5 @@ export default class Withdrawal extends Transaction {
                 </Col>
             </Panel>
         );
-    }
-
-    handleFormSubmit(event) {
-        event.preventDefault();
-        $('button[type="submit"]').prop('disabled', true);
-        $.post(
-            urls.submitWithdrawal,
-            $('#withdrawal-form').serialize(),
-        ).done((data) => {
-            if (data.success) {
-                this.setState({
-                    rippleAddress: data['ripple_address'],
-                    destinationTag: data['destination_tag'],
-                    dashToTransfer: data['dash_to_transfer'],
-                    statusUrl: data['status_url'],
-                });
-            } else {
-                this.setState({formErrors: data['form_errors']});
-            }
-        }).always(() => {$('button[type="submit"]').prop('disabled', false);})
     }
 }
