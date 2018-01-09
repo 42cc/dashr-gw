@@ -83,9 +83,12 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_get_address_balance,
     ):
         patched_get_address_balance.return_value = 0
+        gateway_settings = models.GatewaySettings.get_solo()
         self.transaction.timestamp = (
             self.transaction.timestamp -
-            timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
+            timedelta(
+                minutes=gateway_settings.transaction_expiration_minutes + 1,
+            )
         )
         self.transaction.save()
         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
@@ -355,9 +358,12 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
         patched_send_dash_transaction_task_delay.assert_called_once()
 
     def test_marks_transaction_as_overdue_if_time_exceeded(self):
+        gateway_settings = models.GatewaySettings.get_solo()
         self.transaction.timestamp = (
             self.transaction.timestamp -
-            timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
+            timedelta(
+                minutes=gateway_settings.transaction_expiration_minutes + 1,
+            )
         )
         self.transaction.save()
         tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))

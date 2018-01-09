@@ -46,6 +46,10 @@ class GatewaySettings(SingletonModel):
         default=6,
         verbose_name='Dash - minimal confirmations',
     )
+    transaction_expiration_minutes = models.PositiveIntegerField(
+        default=60,
+        verbose_name='Transaction expiration (minutes)',
+    )
 
     def __str__(self):
         return 'Gateway Settings'

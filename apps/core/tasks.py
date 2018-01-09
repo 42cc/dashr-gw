@@ -75,10 +75,11 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         monitor_transaction_confirmations_number.delay(transaction_id)
         return
 
+    expiration_minutes = (
+        models.GatewaySettings.get_solo().transaction_expiration_minutes
+    )
     # If transaction is overdue.
-    if transaction.timestamp + timedelta(
-        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
-    ) < now():
+    if transaction.timestamp + timedelta(minutes=expiration_minutes) < now():
         transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Became overdue'.format(transaction_id))
@@ -252,9 +253,10 @@ def monitor_ripple_to_dash_transaction(transaction_id):
             'Withdrawal {}. No transaction found yet'.format(transaction_id),
         )
 
-    if transaction.timestamp + timedelta(
-        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
-    ) < now():
+    expiration_minutes = (
+         models.GatewaySettings.get_solo().transaction_expiration_minutes
+    )
+    if transaction.timestamp + timedelta(minutes=expiration_minutes) < now():
         transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
         logger.info('Withdrawal {}. Became overdue'.format(transaction_id))
