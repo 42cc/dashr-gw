@@ -86,7 +86,6 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         raise monitor_dash_to_ripple_transaction.retry(
             (transaction_id,),
             countdown=60,
-            max_retries=settings.TRANSACTION_OVERDUE_MINUTES,
         )
 
 
@@ -262,7 +261,6 @@ def monitor_ripple_to_dash_transaction(transaction_id):
         raise monitor_ripple_to_dash_transaction.retry(
             (transaction_id,),
             countdown=60,
-            max_retries=settings.TRANSACTION_OVERDUE_MINUTES,
         )
 
 
