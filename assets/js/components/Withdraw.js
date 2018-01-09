@@ -8,14 +8,13 @@ import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
 import HelpBlock from 'react-bootstrap/lib/HelpBlock';
 import Col from 'react-bootstrap/lib/Col';
-import Decimal from 'decimal.js';
 
-export default class DepositDash extends React.Component {
+import Transaction from './Transaction';
+
+export default class Withdrawal extends Transaction {
     constructor(props) {
         super(props);
-        this.state = {
-            minWithdrawalAmount: '0.00000001',
-        };
+        this.transactionType = 'withdrawal';
     }
 
     render() {
@@ -33,8 +32,7 @@ export default class DepositDash extends React.Component {
                             <b>{this.state.rippleAddress} </b>
                         </p>
                         <p>
-                            You can track status of this transaction
-                            {' '}
+                            <span>You can track status of this transaction </span>
                             <a href={this.state.statusUrl}>here</a>.
                         </p>
                     </Col>
@@ -57,13 +55,13 @@ export default class DepositDash extends React.Component {
                         <FormGroup controlId="dash_to_transfer_input"
                                    validationState={this.getFieldValidationState('dash_to_transfer')}>
                             <ControlLabel>
-                                Withdrawal Amount (Min. {this.state.minWithdrawalAmount} DASH):
+                                Withdrawal Amount (Min. {this.state.minAmount} DASH):
                             </ControlLabel>
                             <FormControl type="number"
                                          name="dash_to_transfer"
                                          onInput={this.changeReceiveAmountField.bind(this)}
                                          step="0.00000001"
-                                         min={this.state.minWithdrawalAmount}
+                                         min={this.state.minAmount}
                                          required/>
                             {this.getFieldError('dash_to_transfer')}
                             <FormControl.Feedback />
@@ -80,10 +78,6 @@ export default class DepositDash extends React.Component {
                 </Col>
             </Panel>
         );
-    }
-
-    componentDidMount() {
-        window.addEventListener('load', () => {this.setState({minWithdrawalAmount: minAmounts.withdrawal})})
     }
 
     handleFormSubmit(event) {
@@ -104,56 +98,5 @@ export default class DepositDash extends React.Component {
                 this.setState({formErrors: data['form_errors']});
             }
         }).always(() => {$('button[type="submit"]').prop('disabled', false);})
-    }
-
-    hasErrorsField(fieldName) {
-        return (this.state.formErrors && this.state.formErrors[fieldName]);
-    }
-
-    getFieldError(fieldName) {
-        if (this.hasErrorsField(fieldName)) {
-            return (
-                <HelpBlock>{this.state.formErrors[fieldName][0]}</HelpBlock>
-            );
-        }
-    }
-
-    getFieldValidationState(fieldName) {
-        if (this.hasErrorsField(fieldName)) {
-            return "error";
-        }
-    }
-
-    changeReceiveAmountField(event) {
-        const $amountField = $(event.target);
-        const $receiveAmountField = $('#dash_to_receive_input');
-        if (!$amountField.val()) {
-            $receiveAmountField.val('');
-            return;
-        }
-
-        Decimal.set({
-            rounding: Decimal.ROUND_DOWN,
-            toExpNeg: -9,
-        });
-        const amount = new Decimal($amountField.val());
-        // Truncate amount to 8 decimal places.
-        const truncatedAmount = amount.toDecimalPlaces(8);
-
-        if (!amount.equals(truncatedAmount)) {
-            $amountField.val(truncatedAmount);
-        }
-
-        // Set received amount.
-        if (truncatedAmount < Decimal(this.state.minWithdrawalAmount)) {
-            $receiveAmountField.val(0);
-            return;
-        }
-        $.getJSON(
-            urls.getReceivedAmount,
-            {'amount': truncatedAmount.toString(), 'transaction_type': 'withdrawal'},
-        ).done((data) => {
-            $receiveAmountField.val(Decimal(data['received_amount']));
-        });
     }
 }
