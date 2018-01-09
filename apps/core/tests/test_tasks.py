@@ -139,61 +139,62 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
         patched_retry.assert_called_once()
 
 
-# class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
-#     @patch('apps.core.models.DashWallet.get_new_address')
-#     def setUp(self, patched_get_new_address):
-#         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
-#         models.RippleWalletCredentials.get_solo()
-#         patched_get_new_address.return_value = (
-#             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
-#         )
-#         self.transaction = models.DepositTransaction.objects.create(
-#             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
-#         )
-#
-#     @patch('apps.core.tasks.send_ripple_transaction.delay')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_marks_transaction_as_confirmed_if_confirmed_balance_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_send_ripple_transaction_task_delay,
-#     ):
-#         patched_get_address_balance.return_value = 1
-#         tasks.monitor_transaction_confirmations_number.apply(
-#             (self.transaction.id,),
-#         )
-#         self.transaction.refresh_from_db()
-#         self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
-#
-#     @patch('apps.core.tasks.send_ripple_transaction.delay')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_launches_send_ripple_transaction_if_confirmed_balance_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_send_ripple_transaction_task_delay,
-#     ):
-#         patched_get_address_balance.return_value = 1
-#         tasks.monitor_transaction_confirmations_number.apply(
-#             (self.transaction.id,),
-#         )
-#         patched_send_ripple_transaction_task_delay.assert_called_once()
-#
-#     @patch('apps.core.tasks.monitor_transaction_confirmations_number.retry')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_retries_if_confirmed_balance_is_not_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_retry,
-#     ):
-#         self.transaction.dash_to_transfer = 1
-#         self.transaction.save()
-#         patched_get_address_balance.return_value = 0
-#         tasks.monitor_transaction_confirmations_number.apply(
-#             (self.transaction.id,),
-#         )
-#         patched_retry.assert_called_once()
-#
-#
+class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def setUp(self, patched_get_new_address):
+        celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        models.RippleWalletCredentials.get_solo()
+        patched_get_new_address.return_value = (
+            'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        )
+        self.transaction = models.DepositTransaction.objects.create(
+            ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
+        )
+
+    @patch('apps.core.tasks.send_ripple_transaction.delay')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_marks_transaction_as_confirmed_if_confirmed_balance_positive(
+        self,
+        patched_get_address_balance,
+        patched_send_ripple_transaction_task_delay,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
+
+    @patch('apps.core.tasks.send_ripple_transaction.delay')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_launches_send_ripple_transaction_if_confirmed_balance_positive(
+        self,
+        patched_get_address_balance,
+        patched_send_ripple_transaction_task_delay,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
+        patched_send_ripple_transaction_task_delay.assert_called_once()
+
+    @patch('apps.core.tasks.monitor_transaction_confirmations_number.retry')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_retries_if_confirmed_balance_is_not_positive(
+        self,
+        patched_get_address_balance,
+        patched_retry,
+    ):
+        self.transaction.dash_to_transfer = 1
+        self.transaction.save()
+        patched_get_address_balance.return_value = 0
+        tasks.monitor_transaction_confirmations_number.apply(
+            (self.transaction.id,),
+        )
+        patched_retry.assert_called_once()
+
+
 # class SendRippleTransactionTaskTest(TestCase):
 #     @patch('apps.core.models.DashWallet.get_new_address')
 #     def setUp(self, patched_get_new_address):

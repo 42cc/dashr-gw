@@ -105,9 +105,10 @@ def monitor_transaction_confirmations_number(transaction_id):
     )
 
     logger.info(
-        'Deposit {}. Confirmed balance - {}'.format(
+        'Deposit {}. Confirmed {} of {} DASH'.format(
             transaction_id,
             confirmed_balance,
+            transaction.get_normalized_dash_to_transfer(),
         ),
     )
 
