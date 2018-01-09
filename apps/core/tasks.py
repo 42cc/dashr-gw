@@ -47,8 +47,9 @@ celery_transaction_task = celery_app.task(
     autoretry_for=(socket.error, DatabaseError, JSONRPCException),
     retry_kwargs={
         'max_retries': None,
-        'countdown': 30,
+        'countdown': 60,
     },
+    max_retries=None,
 )
 
 
