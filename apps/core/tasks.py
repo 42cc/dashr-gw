@@ -18,7 +18,7 @@ from django.utils.timezone import now, timedelta
 from apps.core import models, utils, wallet
 from gateway import celery_app
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('gateway')
 
 
 @celery_app.task

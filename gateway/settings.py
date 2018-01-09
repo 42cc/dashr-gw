@@ -210,6 +210,14 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/gateway.log'),
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 100,
+            'formatter': 'simple',
+        },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
@@ -219,17 +227,22 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True
         },
         'gateway': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
+            'handlers': ['mail_admins', 'file', 'console'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'celery': {
+            'handlers': ['mail_admins', 'file', 'console'],
+            'level': 'INFO',
             'propagate': True
         },
         'ripple': {
-            'handlers': ['console'],
+            'handlers': ['mail_admins', 'file', 'console'],
             'level': 'INFO',
             'propagate': True
         },
