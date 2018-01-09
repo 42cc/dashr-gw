@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-import configparser
 import os
 import sys
 
@@ -23,28 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'jksd@$=t_y2_epxck%_^%6mk$l8e6&mq)*++s%q6%yyk3!1v&x'
 
-try:
-    gateway_config = configparser.ConfigParser()
-    with open(os.path.join(BASE_DIR, 'gateway.cfg')) as gateway_config_file:
-        gateway_config.read_file(gateway_config_file)
-
-    DASHD_RPCUSER = gateway_config.get('dashd_credentials', 'rpcuser')
-    DASHD_RPCPASSWORD = gateway_config.get('dashd_credentials', 'rpcpassword')
-    DASHD_ACCOUNT_NAME = gateway_config.get(
-        'dashd_credentials', 'account_name'
-    )
-
-    TRANSACTION_OVERDUE_MINUTES = int(
-        gateway_config.get('general', 'transaction_overdue_minutes'),
-    )
-except (configparser.NoOptionError, configparser.NoSectionError) as e:
-    raise Exception(
-        "Please add all needed credentials to 'gateway.cfg'. {}".format(e)
-    )
-except IOError:
-    raise Exception(
-        "Please make sure a configuration file 'gateway.cfg' exists"
-    )
+DASHD_RPCUSER = 'rpcuser'
+DASHD_RPCPASSWORD = 'rpcpassword'
+DASHD_ACCOUNT_NAME = 'gateway'
 
 RIPPLE_API_DATA = [
     {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
