@@ -109,6 +109,7 @@ class DepositSubmitApiViewTest(TestCase):
         response_content = json.loads(response.content)
         self.assertIn('success', response_content)
         self.assertIn('dash_wallet', response_content)
+        self.assertIn('dash_to_transfer', response_content)
         self.assertIn('status_url', response_content)
         self.assertEqual(response_content['success'], True)
 

@@ -69,6 +69,7 @@ class DepositSubmitApiView(BaseFormView):
             {
                 'success': True,
                 'dash_wallet': transaction.dash_address,
+                'dash_to_transfer': transaction.dash_to_transfer,
                 'status_url': reverse(
                     'deposit-status',
                     args=(transaction.id,),
