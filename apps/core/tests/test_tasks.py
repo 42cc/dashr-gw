@@ -41,103 +41,104 @@ class CeleryTransactionBaseTaskTest(TestCase):
         self.assertEqual(transaction.state, transaction.FAILED)
 
 
-# class MonitorDashToRippleTransactionTaskTest(TestCase):
-#     @patch('apps.core.models.DashWallet.get_new_address')
-#     def setUp(self, patched_get_new_address):
-#         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
-#         models.RippleWalletCredentials.get_solo()
-#         patched_get_new_address.return_value = (
-#             'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
-#         )
-#         self.transaction = models.DepositTransaction.objects.create(
-#             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
-#         )
-#
-#     @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_marks_transaction_as_unconfirmed_if_balance_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_monitor_confirmations_number_task_delay,
-#     ):
-#         patched_get_address_balance.return_value = 1
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         self.transaction.refresh_from_db()
-#         self.assertEqual(self.transaction.state, self.transaction.UNCONFIRMED)
-#
-#     @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_launches_monitoring_confirmations_number_if_balance_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_monitor_confirmations_number_task_delay,
-#     ):
-#         patched_get_address_balance.return_value = 1
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         patched_monitor_confirmations_number_task_delay.assert_called_once()
-#
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_marks_transaction_as_overdue_if_time_exceeded(
-#         self,
-#         patched_get_address_balance,
-#     ):
-#         patched_get_address_balance.return_value = 0
-#         self.transaction.timestamp = (
-#             self.transaction.timestamp -
-#             timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
-#         )
-#         self.transaction.save()
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         self.transaction.refresh_from_db()
-#         self.assertEqual(self.transaction.state, self.transaction.OVERDUE)
-#
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_not_marks_transaction_as_overdue_if_time_not_exceeded(
-#         self,
-#         patched_get_address_balance,
-#     ):
-#         patched_get_address_balance.return_value = 0
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         self.transaction.refresh_from_db()
-#         self.assertNotEqual(self.transaction.state, self.transaction.OVERDUE)
-#
-#     @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_retries_if_balance_is_not_positive(
-#         self,
-#         patched_get_address_balance,
-#         patched_retry,
-#     ):
-#         patched_get_address_balance.return_value = 0
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         patched_retry.assert_called_once()
-#
-#     @patch('apps.core.models.DashWallet')
-#     @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_retries_if_cannot_connect_to_db(
-#         self,
-#         patched_get_address_balance,
-#         patched_retry,
-#         patched_model,
-#     ):
-#         patched_get_address_balance.return_value = 0
-#         patched_model.objects.get.side_effect = OperationalError
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         patched_retry.assert_called_once()
-#
-#     @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
-#     @patch('apps.core.models.DashWallet.get_address_balance')
-#     def test_retries_if_cannot_connect_to_dash_server(
-#         self,
-#         patched_get_address_balance,
-#         patched_retry,
-#     ):
-#         patched_get_address_balance.side_effect = socket.error
-#         tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
-#         patched_retry.assert_called_once()
-#
-#
+class MonitorDashToRippleTransactionTaskTest(TestCase):
+    @patch('apps.core.models.DashWallet.get_new_address')
+    def setUp(self, patched_get_new_address):
+        celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
+        models.RippleWalletCredentials.get_solo()
+        patched_get_new_address.return_value = (
+            'XekiLaxnqpFb2m4NQAEcsKutZcZgcyfo6W'
+        )
+        self.transaction = models.DepositTransaction.objects.create(
+            ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
+        )
+
+    @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_marks_transaction_as_unconfirmed_if_balance_positive(
+        self,
+        patched_get_address_balance,
+        patched_monitor_confirmations_number_task_delay,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.UNCONFIRMED)
+
+    @patch('apps.core.tasks.monitor_transaction_confirmations_number.delay')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_launches_monitoring_confirmations_number_if_balance_positive(
+        self,
+        patched_get_address_balance,
+        patched_monitor_confirmations_number_task_delay,
+    ):
+        patched_get_address_balance.return_value = 1
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        patched_monitor_confirmations_number_task_delay.assert_called_once()
+
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_marks_transaction_as_overdue_if_time_exceeded(
+        self,
+        patched_get_address_balance,
+    ):
+        patched_get_address_balance.return_value = 0
+        self.transaction.timestamp = (
+            self.transaction.timestamp -
+            timedelta(minutes=settings.TRANSACTION_OVERDUE_MINUTES + 1)
+        )
+        self.transaction.save()
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.state, self.transaction.OVERDUE)
+
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_not_marks_transaction_as_overdue_if_time_not_exceeded(
+        self,
+        patched_get_address_balance,
+    ):
+        patched_get_address_balance.return_value = 0
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        self.transaction.refresh_from_db()
+        self.assertNotEqual(self.transaction.state, self.transaction.OVERDUE)
+
+    @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_retries_if_balance_is_not_positive(
+        self,
+        patched_get_address_balance,
+        patched_retry,
+    ):
+        patched_get_address_balance.return_value = 0
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        patched_retry.assert_called_once()
+
+    @patch('apps.core.models.DashWallet')
+    @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_retries_if_cannot_connect_to_db(
+        self,
+        patched_get_address_balance,
+        patched_retry,
+        patched_model,
+    ):
+        patched_get_address_balance.return_value = 0
+        patched_model.objects.get.side_effect = OperationalError
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        patched_retry.assert_called_once()
+
+    @patch('apps.core.tasks.monitor_dash_to_ripple_transaction.retry')
+    @patch('apps.core.models.DashWallet.get_address_balance')
+    def test_retries_if_cannot_connect_to_dash_server(
+        self,
+        patched_get_address_balance,
+        patched_retry,
+    ):
+        patched_get_address_balance.side_effect = socket.error
+        tasks.monitor_dash_to_ripple_transaction.apply((self.transaction.id,))
+        patched_retry.assert_called_once()
+
+
 # class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
 #     @patch('apps.core.models.DashWallet.get_new_address')
 #     def setUp(self, patched_get_new_address):

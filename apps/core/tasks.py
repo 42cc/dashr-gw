@@ -58,13 +58,18 @@ def monitor_dash_to_ripple_transaction(transaction_id):
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
     dash_wallet = wallet.DashWallet()
-    balance = dash_wallet.get_address_balance(transaction.dash_address)
-    logger.info('Deposit {}. Balance {}'.format(transaction_id, balance))
+    balance = dash_wallet.get_address_balance(transaction.dash_address, 0)
+    logger.info(
+        'Deposit {}. Received {} (unconfirmed) of {} DASH'.format(
+            transaction_id,
+            balance,
+            transaction.get_normalized_dash_to_transfer(),
+        ),
+    )
 
-    if balance > 0:
+    if balance >= transaction.dash_to_transfer:
         transaction.state = transaction.UNCONFIRMED
-        transaction.dash_to_transfer = balance
-        transaction.save()
+        transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Became unconfirmed'.format(transaction_id))
         monitor_transaction_confirmations_number.delay(transaction_id)
         return
