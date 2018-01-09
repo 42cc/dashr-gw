@@ -33,9 +33,6 @@ try:
     DASHD_ACCOUNT_NAME = gateway_config.get(
         'dashd_credentials', 'account_name'
     )
-    DASHD_MINIMAL_CONFIRMATIONS = int(
-        gateway_config.get('dashd_credentials', 'minimal_confirmations'),
-    )
 
     TRANSACTION_OVERDUE_MINUTES = int(
         gateway_config.get('general', 'transaction_overdue_minutes'),

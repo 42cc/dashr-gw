@@ -98,10 +98,11 @@ def monitor_transaction_confirmations_number(transaction_id):
     )
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
+    gateway_settings = models.GatewaySettings.get_solo()
     dash_wallet = wallet.DashWallet()
     confirmed_balance = dash_wallet.get_address_balance(
         transaction.dash_address,
-        settings.DASHD_MINIMAL_CONFIRMATIONS,
+        gateway_settings.dash_required_confirmations,
     )
 
     logger.info(

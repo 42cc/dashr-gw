@@ -19,12 +19,6 @@ class DashWallet(object):
     def _rpc_connection(self):
         return AuthServiceProxy(self._dashd_url)
 
-    def get_balance(self):
-        return self._rpc_connection.getbalance(
-            self.account_name,
-            settings.DASHD_MINIMAL_CONFIRMATIONS,
-        )
-
     def get_address_balance(self, address, min_confirmations):
         return self._rpc_connection.getreceivedbyaddress(
             address,
