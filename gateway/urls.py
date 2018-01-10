@@ -6,6 +6,7 @@ from apps.core.views import (
     GetPageDetailsView,
     IndexView,
     WithdrawalSubmitApiView,
+    WithdrawalStatusApiView,
 )
 
 
@@ -32,6 +33,17 @@ urlpatterns = [
         GetPageDetailsView.as_view(),
         {'slug': 'status'},
         name='deposit-status',
+    ),
+    url(
+        r'^withdraw/(?P<transaction_id>[0-9]+)/status-api/',
+        WithdrawalStatusApiView.as_view(),
+        name='withdrawal-status-api',
+    ),
+    url(
+        r'^withdraw/(?P<transaction_id>[0-9]+)/',
+        GetPageDetailsView.as_view(),
+        {'slug': 'status'},
+        name='withdrawal-status',
     ),
     url(r'^(?P<slug>[a-z0-9-]+?)/$',
         GetPageDetailsView.as_view(), name='page'),

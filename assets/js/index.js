@@ -8,6 +8,7 @@ import Home from "./components/Home";
 import Deposit from "./components/Deposit";
 import DepositStatus from "./components/DepositStatus";
 import Withdraw from "./components/Withdraw";
+import WithdrawStatus from "./components/WithdrawStatus";
 import Page from "./components/Page";
 import Wrapper from "./components/Wrapper";
 
@@ -27,6 +28,8 @@ class App extends React.Component {
 
                             <Route path="/deposit/:transactionId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/"
                                    component={DepositStatus}/>
+                            <Route path="/withdraw/:transactionId(\d+)/"
+                                   component={WithdrawStatus}/>
 
                             <Route path="/:slug/how-to/"
                                    component={props => <Page {...props} wrapped='true'/>}/>

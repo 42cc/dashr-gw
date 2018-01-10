@@ -105,7 +105,7 @@ class DepositTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            '`Received 0 Dash transactions. Transactions to the address '
+            'Received 0 Dash transactions. Transactions to the address '
             '{dash_address} are no longer tracked',
         ),
         (
@@ -160,6 +160,30 @@ class DepositTransaction(BaseTransaction):
 
 
 class WithdrawalTransaction(BaseTransaction):
+    STATE_CHOICES = (
+        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.CONFIRMED,
+            'Received an incoming transaction '
+            '{incoming_ripple_transaction_hash} ({dash_to_transfer} DASH). '
+            'Initiated an outgoing one',
+        ),
+        (
+            TransactionStates.PROCESSED,
+            'Transaction is processed. Hash of a Dash transaction is '
+            '{outgoing_dash_transaction_hash}',
+        ),
+        (
+            TransactionStates.OVERDUE,
+            'Received 0 Ripple transactions. Transactions with the '
+            'destination tag {destination_tag} are no longer tracked',
+        ),
+        (
+            TransactionStates.FAILED,
+            'Transaction failed. Please contact our support team',
+        ),
+    )
+
     id = models.BigAutoField(
         primary_key=True,
         serialize=False,
@@ -168,6 +192,7 @@ class WithdrawalTransaction(BaseTransaction):
 
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
+        choices=STATE_CHOICES,
     )
 
     incoming_ripple_transaction_hash = models.CharField(
@@ -186,9 +211,20 @@ class WithdrawalTransaction(BaseTransaction):
     def destination_tag(self):
         return self.id
 
+    @staticmethod
+    def post_save_signal_handler(instance, **kwargs):
+        WithdrawalTransactionStateChange.objects.create(
+            transaction=instance,
+            current_state=instance.get_state_display().format(
+                destination_tag=instance.destination_tag,
+                **instance.__dict__
+            ),
+        )
+
 
 class BaseTransactionStateChange(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
+    current_state = models.CharField(max_length=500)
 
     class Meta:
         abstract = True
@@ -199,10 +235,20 @@ class DepositTransactionStateChange(BaseTransactionStateChange):
         DepositTransaction,
         related_name='state_changes',
     )
-    current_state = models.CharField(max_length=500)
+
+
+class WithdrawalTransactionStateChange(BaseTransactionStateChange):
+    transaction = models.ForeignKey(
+        WithdrawalTransaction,
+        related_name='state_changes',
+    )
 
 
 post_save.connect(
     DepositTransaction.post_save_signal_handler,
     sender=DepositTransaction,
+)
+post_save.connect(
+    WithdrawalTransaction.post_save_signal_handler,
+    sender=WithdrawalTransaction,
 )
