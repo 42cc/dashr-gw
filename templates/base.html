@@ -45,11 +45,14 @@
 		{% compress js inline %}
             <script>
                 var urls = {
-                    submitDeposit: '{% url 'submit-deposit' %}',
-                    submitWithdrawal: '{% url 'submit-withdrawal' %}',
-                    getDashReceivedAmount: '{% url 'get-dash-received-amount' %}',
+                    submit: {
+                        deposit: '{% url 'submit-deposit' %}',
+                        withdrawal: '{% url 'submit-withdrawal' %}',
+                    },
+                    getReceivedAmount: '{% url 'get-received-amount' %}',
                 };
                 var minAmounts = {
+                    deposit: '{{ minimal_deposit_amount }}',
                     withdrawal: '{{ minimal_withdrawal_amount }}',
                 };
             </script>

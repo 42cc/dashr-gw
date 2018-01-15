@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from mock import patch
 
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse
@@ -19,7 +18,7 @@ from apps.core.models import (
     WithdrawalTransaction,
 )
 from apps.core.views import (
-    GetDashReceivedAmountApiView,
+    GetReceivedAmountApiView,
     DepositSubmitApiView,
     WithdrawalSubmitApiView,
     DepositStatusApiView,
@@ -107,23 +106,21 @@ class DepositSubmitApiViewTest(TestCase):
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
-        self.assertIn('dash_wallet', response_content)
         self.assertIn('status_url', response_content)
-        self.assertEqual(response_content['success'], True)
 
     def test_view_with_invalid_form(self):
         request = self.factory.post('', {'ripple_address': 'Invalid address'})
         response = DepositSubmitApiView.as_view()(request)
         self.assertIsInstance(response, JsonResponse)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
-        self.assertIn('ripple_address_error', response_content)
-        self.assertEqual(response_content['success'], False)
+        self.assertIn('form_errors', response_content)
         self.assertEqual(
-            response_content['ripple_address_error'],
-            'The Ripple address is not valid.',
+            response_content['form_errors'],
+            {
+                'ripple_address': ['The Ripple address is not valid.'],
+                'dash_to_transfer': ['This field is required.'],
+            },
         )
 
 
@@ -155,12 +152,7 @@ class WithdrawalSubmitApiViewTest(TestCase):
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, 200)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
-        self.assertIn('ripple_address', response_content)
-        self.assertIn('destination_tag', response_content)
-        self.assertIn('dash_to_transfer', response_content)
         self.assertIn('status_url', response_content)
-        self.assertEqual(response_content['success'], True)
 
     @patch('apps.core.models.DashWallet.check_address_valid')
     def test_view_with_invalid_form(self, patched_check_address_valid):
@@ -168,11 +160,9 @@ class WithdrawalSubmitApiViewTest(TestCase):
         request = self.factory.post('', {'dash_address': 'Invalid address'})
         response = WithdrawalSubmitApiView.as_view()(request)
         self.assertIsInstance(response, JsonResponse)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         response_content = json.loads(response.content)
-        self.assertIn('success', response_content)
         self.assertIn('form_errors', response_content)
-        self.assertEqual(response_content['success'], False)
         self.assertEqual(
             response_content['form_errors'],
             {
@@ -205,11 +195,7 @@ class DepositStatusApiViewTest(TestCase):
         expected_response_content = json.dumps(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=ripple_address,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             },
             cls=DjangoJSONEncoder,
@@ -243,26 +229,43 @@ class WithdrawalStatusApiViewTest(TestCase):
         self.assertEqual(response.content, expected_response_content)
 
 
-class GetDashReceivedAmountApiViewTest(TestCase):
+class GetReceivedAmountApiViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.factory = RequestFactory()
 
     def test_view_returns_400_without_amount(self):
         request = self.factory.get('')
-        response = GetDashReceivedAmountApiView.as_view()(request)
+        response = GetReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_view_returns_400_without_transaction_type(self):
+        request = self.factory.get('', {'transaction_type': 'deposit'})
+        response = GetReceivedAmountApiView.as_view()(request)
+        self.assertEqual(response.status_code, 400)
+
+    def test_view_returns_400_with_invalid_transaction_type(self):
+        request = self.factory.get('', {'transaction_type': 'undefined'})
+        response = GetReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 400)
 
     def test_view_returns_400_with_invalid_amount(self):
         request = self.factory.get('', {'amount': '9.9.9'})
-        response = GetDashReceivedAmountApiView.as_view()(request)
+        response = GetReceivedAmountApiView.as_view()(request)
         self.assertEqual(response.status_code, 400)
 
-    @patch('apps.core.views.get_received_amount_dash')
-    def test_view_with_amount(self, patched_get_received_amount_dash):
-        patched_get_received_amount_dash.return_value = Decimal(99)
-        request = self.factory.get('', {'amount': 1})
-        response = GetDashReceivedAmountApiView.as_view()(request)
-        self.assertEqual(response.status_code, 200)
-        patched_get_received_amount_dash.assert_called_once()
-        self.assertEqual(response.content, '{"received_amount": "99"}')
+    @patch('apps.core.views.get_received_amount')
+    def test_view_with_amount(self, patched_get_received_amount):
+        patched_get_received_amount.return_value = Decimal(99)
+        for transaction_type in ('deposit', 'withdrawal'):
+            request = self.factory.get(
+                '',
+                {'amount': 1, 'transaction_type': transaction_type},
+            )
+            response = GetReceivedAmountApiView.as_view()(request)
+            patched_get_received_amount.assert_called_with(
+                '1',
+                transaction_type,
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, '{"received_amount": "99"}')

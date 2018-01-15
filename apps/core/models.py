@@ -46,6 +46,10 @@ class GatewaySettings(SingletonModel):
         default=6,
         verbose_name='Dash - minimal confirmations',
     )
+    transaction_expiration_minutes = models.PositiveIntegerField(
+        default=60,
+        verbose_name='Transaction expiration (minutes)',
+    )
 
     def __str__(self):
         return 'Gateway Settings'
@@ -124,16 +128,19 @@ class BaseTransaction(models.Model, TransactionStates):
 
 class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
-        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.INITIATED,
+            'Initiated. Send {dash_to_transfer} DASH to {dash_address}',
+        ),
         (
             TransactionStates.UNCONFIRMED,
-            'Received an incoming transaction ({dash_to_transfer:f} DASH). '
-            'Waiting for {confirmations_number} confirmations',
+            'Received {dash_to_transfer} DASH. Waiting for '
+            '{confirmations_number} confirmations',
         ),
         (
             TransactionStates.CONFIRMED,
-            'Confirmed the incoming transaction ({dash_to_transfer:f} DASH). '
-            'Initiated an outgoing one',
+            'Confirmed receiving {dash_to_transfer} DASH. Initiated an '
+            'outgoing transaction',
         ),
         (
             TransactionStates.PROCESSED,
@@ -142,8 +149,8 @@ class DepositTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            'Received 0 Dash transactions. Transactions to the address '
-            '{dash_address} are no longer tracked',
+            'Time expired. Transactions to {dash_address} are no longer '
+            'tracked',
         ),
         (
             TransactionStates.FAILED,
@@ -186,16 +193,22 @@ class DepositTransaction(BaseTransaction):
             self.dash_address = dash_wallet.get_new_address()
         super(DepositTransaction, self).save(*args, **kwargs)
 
+    def get_current_state(self):
+        values = self.__dict__
+        values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
+        values['confirmations_number'] = (
+            GatewaySettings.get_solo().dash_required_confirmations
+        )
+        values['gateway_ripple_address'] = (
+            RippleWalletCredentials.get_solo().address
+        )
+        return self.get_state_display().format(**values)
+
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
-        ripple_address = RippleWalletCredentials.get_solo().address
         DepositTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.get_state_display().format(
-                confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                gateway_ripple_address=ripple_address,
-                **instance.__dict__
-            ),
+            current_state=instance.get_current_state(),
         )
 
 

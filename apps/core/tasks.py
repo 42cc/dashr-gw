@@ -9,7 +9,6 @@ from ripple_api.models import Transaction as RippleTransaction
 from ripple_api.ripple_api import balance as get_ripple_balance, is_trust_set
 from ripple_api.tasks import sign_task, submit_task
 
-from django.conf import settings
 from django.db.models import Sum, DecimalField
 from django.db.models.functions import Cast
 from django.db.utils import DatabaseError
@@ -18,7 +17,7 @@ from django.utils.timezone import now, timedelta
 from apps.core import models, utils, wallet
 from gateway import celery_app
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('gateway')
 
 
 @celery_app.task
@@ -47,8 +46,9 @@ celery_transaction_task = celery_app.task(
     autoretry_for=(socket.error, DatabaseError, JSONRPCException),
     retry_kwargs={
         'max_retries': None,
-        'countdown': 30,
+        'countdown': 60,
     },
+    max_retries=None,
 )
 
 
@@ -58,21 +58,27 @@ def monitor_dash_to_ripple_transaction(transaction_id):
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
     dash_wallet = wallet.DashWallet()
-    balance = dash_wallet.get_address_balance(transaction.dash_address)
-    logger.info('Deposit {}. Balance {}'.format(transaction_id, balance))
+    balance = dash_wallet.get_address_balance(transaction.dash_address, 0)
+    logger.info(
+        'Deposit {}. Received {} (unconfirmed) of {} DASH'.format(
+            transaction_id,
+            balance,
+            transaction.get_normalized_dash_to_transfer(),
+        ),
+    )
 
-    if balance > 0:
+    if balance >= transaction.dash_to_transfer:
         transaction.state = transaction.UNCONFIRMED
-        transaction.dash_to_transfer = balance
-        transaction.save()
+        transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Became unconfirmed'.format(transaction_id))
         monitor_transaction_confirmations_number.delay(transaction_id)
         return
 
+    expiration_minutes = (
+        models.GatewaySettings.get_solo().transaction_expiration_minutes
+    )
     # If transaction is overdue.
-    if transaction.timestamp + timedelta(
-        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
-    ) < now():
+    if transaction.timestamp + timedelta(minutes=expiration_minutes) < now():
         transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
         logger.info('Deposit {}. Became overdue'.format(transaction_id))
@@ -80,7 +86,6 @@ def monitor_dash_to_ripple_transaction(transaction_id):
         raise monitor_dash_to_ripple_transaction.retry(
             (transaction_id,),
             countdown=60,
-            max_retries=settings.TRANSACTION_OVERDUE_MINUTES,
         )
 
 
@@ -93,16 +98,18 @@ def monitor_transaction_confirmations_number(transaction_id):
     )
     transaction = models.DepositTransaction.objects.get(id=transaction_id)
 
+    gateway_settings = models.GatewaySettings.get_solo()
     dash_wallet = wallet.DashWallet()
     confirmed_balance = dash_wallet.get_address_balance(
         transaction.dash_address,
-        settings.DASHD_MINIMAL_CONFIRMATIONS,
+        gateway_settings.dash_required_confirmations,
     )
 
     logger.info(
-        'Deposit {}. Confirmed balance - {}'.format(
+        'Deposit {}. Confirmed {} of {} DASH'.format(
             transaction_id,
             confirmed_balance,
+            transaction.get_normalized_dash_to_transfer(),
         ),
     )
 
@@ -160,7 +167,12 @@ def send_ripple_transaction(transaction_id):
         account=ripple_credentials.address,
         destination=dash_transaction.ripple_address,
         currency='DSH',
-        value='{0:f}'.format(dash_transaction.dash_to_transfer),
+        value='{0:f}'.format(
+            utils.get_received_amount(
+                dash_transaction.get_normalized_dash_to_transfer(),
+                'deposit',
+            ),
+        ),
     )
 
     sign_task(new_ripple_transaction.pk, ripple_credentials.secret)
@@ -240,9 +252,10 @@ def monitor_ripple_to_dash_transaction(transaction_id):
             'Withdrawal {}. No transaction found yet'.format(transaction_id),
         )
 
-    if transaction.timestamp + timedelta(
-        minutes=settings.TRANSACTION_OVERDUE_MINUTES,
-    ) < now():
+    expiration_minutes = (
+         models.GatewaySettings.get_solo().transaction_expiration_minutes
+    )
+    if transaction.timestamp + timedelta(minutes=expiration_minutes) < now():
         transaction.state = transaction.OVERDUE
         transaction.save(update_fields=('state',))
         logger.info('Withdrawal {}. Became overdue'.format(transaction_id))
@@ -250,7 +263,6 @@ def monitor_ripple_to_dash_transaction(transaction_id):
         raise monitor_ripple_to_dash_transaction.retry(
             (transaction_id,),
             countdown=60,
-            max_retries=settings.TRANSACTION_OVERDUE_MINUTES,
         )
 
 
@@ -265,7 +277,7 @@ def send_dash_transaction(transaction_id):
     dash_wallet = wallet.DashWallet()
     dash_transaction_hash = dash_wallet.send_to_address(
         transaction.dash_address,
-        utils.get_received_amount_dash(transaction.dash_to_transfer),
+        utils.get_received_amount(transaction.dash_to_transfer, 'withdrawal'),
     )
 
     logger.info(

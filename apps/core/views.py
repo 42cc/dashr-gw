@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import BaseFormView
@@ -11,12 +10,11 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .utils import get_received_amount_dash
+from .utils import get_received_amount
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import (
     DepositTransaction,
     Page,
-    RippleWalletCredentials,
     WithdrawalTransaction,
 )
 from .tasks import (
@@ -55,94 +53,40 @@ class GetPageDetailsView(View):
         return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 
 
-class DepositSubmitApiView(BaseFormView):
+class BaseSubmitApiView(BaseFormView):
+    http_method_names = ('post', 'put')
+
+    def form_valid(self, form):
+        transaction = form.save()
+        self.monitor_task.apply_async((transaction.id,), countdown=30)
+        return JsonResponse(
+            {
+                'status_url': reverse(
+                    self.status_urlpattern_name,
+                    args=(transaction.id,),
+                ),
+            },
+        )
+
+    def form_invalid(self, form):
+        return JsonResponse({'form_errors': form.errors}, status=400)
+
+
+class DepositSubmitApiView(BaseSubmitApiView):
     form_class = DepositTransactionModelForm
-    http_method_names = ('post', 'put')
-
-    def form_valid(self, form):
-        transaction = form.save()
-        monitor_dash_to_ripple_transaction.apply_async(
-            (transaction.id,),
-            countdown=30,
-        )
-        return JsonResponse(
-            {
-                'success': True,
-                'dash_wallet': transaction.dash_address,
-                'status_url': reverse(
-                    'deposit-status',
-                    args=(transaction.id,),
-                ),
-            },
-        )
-
-    def form_invalid(self, form):
-        return JsonResponse(
-            {
-                'success': False,
-                'ripple_address_error': form.errors['ripple_address'][0],
-            },
-        )
+    monitor_task = monitor_dash_to_ripple_transaction
+    status_urlpattern_name = 'deposit-status'
 
 
-class WithdrawalSubmitApiView(BaseFormView):
+class WithdrawalSubmitApiView(BaseSubmitApiView):
     form_class = WithdrawalTransactionModelForm
-    http_method_names = ('post', 'put')
-
-    def form_valid(self, form):
-        transaction = form.save()
-        monitor_ripple_to_dash_transaction.apply_async(
-            (transaction.id,),
-            countdown=30,
-        )
-        ripple_address = RippleWalletCredentials.get_solo().address
-        return JsonResponse(
-            {
-                'success': True,
-                'ripple_address': ripple_address,
-                'destination_tag': transaction.destination_tag,
-                'dash_to_transfer': transaction.dash_to_transfer,
-                'status_url': reverse(
-                    'withdrawal-status',
-                    args=(transaction.id,),
-                ),
-            },
-        )
-
-    def form_invalid(self, form):
-        return JsonResponse(
-            {
-                'success': False,
-                'form_errors': form.errors,
-            },
-        )
+    monitor_task = monitor_ripple_to_dash_transaction
+    status_urlpattern_name = 'withdrawal-status'
 
 
-class DepositStatusApiView(View):
-    @staticmethod
-    def get(request, transaction_id):
-        transaction = get_object_or_404(DepositTransaction, id=transaction_id)
-        ripple_address = RippleWalletCredentials.get_solo().address
-        return JsonResponse(
-            {
-                'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    confirmations_number=settings.DASHD_MINIMAL_CONFIRMATIONS,
-                    gateway_ripple_address=ripple_address,
-                    **transaction.__dict__
-                ),
-                'stateHistory': transaction.get_state_history(),
-            }
-        )
-
-
-class WithdrawalStatusApiView(View):
-    @staticmethod
-    def get(request, transaction_id):
-        transaction = get_object_or_404(
-            WithdrawalTransaction,
-            id=transaction_id,
-        )
+class BaseStatusApiView(View):
+    def get(self, request, transaction_id):
+        transaction = get_object_or_404(self.model, id=transaction_id)
         return JsonResponse(
             {
                 'transactionId': transaction.id,
@@ -152,14 +96,29 @@ class WithdrawalStatusApiView(View):
         )
 
 
-class GetDashReceivedAmountApiView(View):
+class DepositStatusApiView(BaseStatusApiView):
+    model = DepositTransaction
+
+
+class WithdrawalStatusApiView(BaseStatusApiView):
+    model = WithdrawalTransaction
+
+
+class GetReceivedAmountApiView(View):
     @staticmethod
     def get(request):
-        if 'amount' not in request.GET:
+        if (
+            'amount' not in request.GET or
+            'transaction_type' not in request.GET or
+            request.GET['transaction_type'] not in ('deposit', 'withdrawal')
+        ):
             return HttpResponseBadRequest()
 
         try:
-            received_amount = get_received_amount_dash(request.GET['amount'])
+            received_amount = get_received_amount(
+                request.GET['amount'],
+                request.GET['transaction_type'],
+            )
         except ArithmeticError:
             return HttpResponseBadRequest()
 

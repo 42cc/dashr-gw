@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from ripple_api import utils as ripple_api_utils
 
 from apps.core.utils import (
-    get_minimal_withdrawal_amount,
+    get_minimal_transaction_amount,
 )
 from apps.core.wallet import DashWallet
 
@@ -30,7 +30,7 @@ def ripple_address_validator(address):
 
 
 def withdrawal_min_dash_amount_validator(amount):
-    min_amount = get_minimal_withdrawal_amount()
+    min_amount = get_minimal_transaction_amount('withdrawal')
     if amount < min_amount:
         raise ValidationError(
             'Ensure this value is greater than or equal to {:f}.'.format(

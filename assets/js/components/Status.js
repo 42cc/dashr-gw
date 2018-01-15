@@ -21,7 +21,7 @@ export default class Status extends React.Component {
             this.getTransactionData();
         }
         return (
-            <Panel header={`Status of a ${this.state.isDeposit ? 'Deposit' : 'Withdrawal'} Transaction`}
+            <Panel header={`Status of a ${this.props.transactionType} Transaction`}
                    bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
                 <Col sm={12} md={9}>
@@ -53,11 +53,16 @@ export default class Status extends React.Component {
     }
 
     getTransactionData() {
+        let transactionType = this.props.transactionType.toLowerCase();
+        if (transactionType === 'withdrawal') {
+            transactionType = 'withdraw';
+        }
         $.getJSON(
-            `/${this.state.isDeposit ? 'deposit' : 'withdraw'}/` +
-            `${this.props.match.params.transactionId}/status-api/`,
+            `/${transactionType}/${this.props.match.params.transactionId}/status-api/`,
         )
           .done(data => { this.setState({transactionData: data}); })
           .fail(() => { this.setState({transactionDoesNotExists: true}); });
+        // Update data every 10 seconds.
+        setTimeout(this.getTransactionData.bind(this), 10000);
     }
 }
