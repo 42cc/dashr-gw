@@ -8,7 +8,7 @@ module.exports = {
     //the entry point we created earlier. Note that './' means
     //your current directory. You don't have to specify the extension  now,
     //because you will specify extensions later in the `resolve` section
-    entry: './assets/js/index',
+    entry: ['babel-polyfill', './assets/js/index'],
 
     output: {
         //where you want your compiled bundle to be stored
@@ -40,7 +40,7 @@ module.exports = {
                 loader: 'babel-loader',
                 query: {
                     //specify that we will be dealing with React code
-                    presets: ['react']
+                    presets: ['react', 'env']
                 }
             }
         ]
