@@ -1,23 +1,10 @@
 {
   "name": "dash-ripple-gw",
   "version": "1.0.0",
-  "description": "Dash Ripple Gateway ======",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "gitolite@trac.42cc.co:dash-ripple-gw"
-  },
-  "keywords": [
-    "gw"
-  ],
-  "author": "",
-  "license": "ISC",
+  "description": "Dash Ripple Gateway",
+  "main": "./assets/js/index",
+  "author": "42 Coffee Cups",
+  "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
