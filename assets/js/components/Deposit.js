@@ -23,42 +23,44 @@ export default class Deposit extends Transaction {
             return <Redirect to={this.state.statusUrl} />;
         }
         return (
-            <Panel header="Deposit DASH to Ripple" bsStyle="default"
-                   className="panel-wrapper panel-wrapper-container">
-                <Col sm={12} md={6}>
-                    <Form onSubmit={this.handleFormSubmit.bind(this)} id="transaction-form">
-                        <DjangoCSRFToken/>
-                        <FormGroup controlId="ripple_address_input"
-                                   validationState={this.getFieldValidationState('ripple_address')}>
-                            <ControlLabel>Your Ripple Address:</ControlLabel>
-                            <FormControl type="text" name="ripple_address" required />
-                            {this.getFieldError('ripple_address')}
-                            <FormControl.Feedback />
-                        </FormGroup>
-                        <FormGroup controlId="dash_to_transfer_input"
-                                   validationState={this.getFieldValidationState('dash_to_transfer')}>
-                            <ControlLabel>
-                                Deposit Amount (Min. {this.state.minAmount} DASH):
-                            </ControlLabel>
-                            <FormControl type="number"
-                                         name="dash_to_transfer"
-                                         onInput={this.changeReceiveAmountField.bind(this)}
-                                         step="0.00000001"
-                                         min={this.state.minAmount}
-                                         required/>
-                            {this.getFieldError('dash_to_transfer')}
-                            <FormControl.Feedback />
-                        </FormGroup>
-                        <FormGroup id="receive-amount-form-group">
-                            <ControlLabel>Receive Amount:</ControlLabel>
-                            <FormControl id="dash_to_receive_input" disabled/>
-                        </FormGroup>
-                        <Button block type="submit">Start</Button>
-                        <HelpBlock>
-                            <Button bsStyle="link" href="/deposit/how-to/">Need help?</Button>
-                        </HelpBlock>
-                    </Form>
-                </Col>
+            <Panel className="panel-wrapper panel-wrapper-container">
+                <Panel.Heading>Deposit DASH to Ripple</Panel.Heading>
+                <Panel.Body>
+                    <Col sm={12} md={6}>
+                        <Form onSubmit={this.handleFormSubmit.bind(this)} id="transaction-form">
+                            <DjangoCSRFToken/>
+                            <FormGroup controlId="ripple_address_input"
+                                       validationState={this.getFieldValidationState('ripple_address')}>
+                                <ControlLabel>Your Ripple Address:</ControlLabel>
+                                <FormControl type="text" name="ripple_address" required />
+                                {this.getFieldError('ripple_address')}
+                                <FormControl.Feedback />
+                            </FormGroup>
+                            <FormGroup controlId="dash_to_transfer_input"
+                                       validationState={this.getFieldValidationState('dash_to_transfer')}>
+                                <ControlLabel>
+                                    Deposit Amount (Min. {this.state.minAmount} DASH):
+                                </ControlLabel>
+                                <FormControl type="number"
+                                             name="dash_to_transfer"
+                                             onInput={this.changeReceiveAmountField.bind(this)}
+                                             step="0.00000001"
+                                             min={this.state.minAmount}
+                                             required/>
+                                {this.getFieldError('dash_to_transfer')}
+                                <FormControl.Feedback />
+                            </FormGroup>
+                            <FormGroup id="receive-amount-form-group">
+                                <ControlLabel>Receive Amount:</ControlLabel>
+                                <FormControl id="dash_to_receive_input" disabled/>
+                            </FormGroup>
+                            <Button block type="submit">Start</Button>
+                            <HelpBlock>
+                                <Button bsStyle="link" href="/deposit/how-to/">Need help?</Button>
+                            </HelpBlock>
+                        </Form>
+                    </Col>
+                </Panel.Body>
             </Panel>
         );
     }

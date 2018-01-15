@@ -9,12 +9,14 @@ export default class Home extends React.Component {
         return (
             <Col sm={6} smOffset={3}>
                 <Panel bsStyle="default" className="panel-wrapper panel-wrapper-main-menu">
-                    <Button bsStyle="default" className="btn-landing" href="/deposit/">
-                        Deposit DASH to Ripple
-                    </Button>
-                    <Button bsStyle="default" className="btn-landing" href="/withdraw/">
-                        Withdraw DASH from Ripple
-                    </Button>
+                    <Panel.Body>
+                        <Button bsStyle="default" className="btn-landing" href="/deposit/">
+                            Deposit DASH to Ripple
+                        </Button>
+                        <Button bsStyle="default" className="btn-landing" href="/withdraw/">
+                            Withdraw DASH from Ripple
+                        </Button>
+                    </Panel.Body>
                 </Panel>
             </Col>
         );

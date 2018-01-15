@@ -41,11 +41,13 @@ export default class Page extends React.Component {
 
         if (wrapped == 'true' & page !== null) {
             pageTempate = (
-                <Panel header={page.title} bsStyle="default"
-                       className="panel-wrapper panel-wrapper-container">
-                    <Col sm={12} md={12}>
-                        <div dangerouslySetInnerHTML={{__html: page.description}}/>
-                    </Col>
+                <Panel className="panel-wrapper panel-wrapper-container">
+                    <Panel.Heading>{page.title}</Panel.Heading>
+                    <Panel.Body>
+                        <Col sm={12}>
+                            <div dangerouslySetInnerHTML={{__html: page.description}}/>
+                        </Col>
+                    </Panel.Body>
                 </Panel>
             )
         } else if (page !== null & wrapped == 'false') {
