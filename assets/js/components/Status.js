@@ -24,7 +24,7 @@ export default class Status extends React.Component {
             <Panel header={`Status of a ${this.state.isDeposit ? 'Deposit' : 'Withdrawal'} Transaction`}
                    bsStyle="default"
                    className="panel-wrapper panel-wrapper-container">
-                <Col sm={12} md={6}>
+                <Col sm={12} md={9}>
                     <p>ID: {transactionData.transactionId}</p>
                     <p>Current state: <b>{transactionData.state}</b></p>
                     <br/>

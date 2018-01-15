@@ -5,12 +5,13 @@ from django.conf import settings
 from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import BaseFormView
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
+from .utils import get_received_amount_dash
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import (
     DepositTransaction,
@@ -94,14 +95,13 @@ class WithdrawalSubmitApiView(BaseFormView):
             (transaction.id,),
             countdown=30,
         )
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         return JsonResponse(
             {
                 'success': True,
                 'ripple_address': ripple_address,
                 'destination_tag': transaction.destination_tag,
+                'dash_to_transfer': transaction.dash_to_transfer,
                 'status_url': reverse(
                     'withdrawal-status',
                     args=(transaction.id,),
@@ -113,7 +113,7 @@ class WithdrawalSubmitApiView(BaseFormView):
         return JsonResponse(
             {
                 'success': False,
-                'dash_address_error': form.errors['dash_address'][0],
+                'form_errors': form.errors,
             },
         )
 
@@ -122,9 +122,7 @@ class DepositStatusApiView(View):
     @staticmethod
     def get(request, transaction_id):
         transaction = get_object_or_404(DepositTransaction, id=transaction_id)
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         return JsonResponse(
             {
                 'transactionId': transaction.id,
@@ -148,10 +146,21 @@ class WithdrawalStatusApiView(View):
         return JsonResponse(
             {
                 'transactionId': transaction.id,
-                'state': transaction.get_state_display().format(
-                    destination_tag=transaction.destination_tag,
-                    **transaction.__dict__
-                ),
+                'state': transaction.get_current_state(),
                 'stateHistory': transaction.get_state_history(),
             }
         )
+
+
+class GetDashReceivedAmountApiView(View):
+    @staticmethod
+    def get(request):
+        if 'amount' not in request.GET:
+            return HttpResponseBadRequest()
+
+        try:
+            received_amount = get_received_amount_dash(request.GET['amount'])
+        except ArithmeticError:
+            return HttpResponseBadRequest()
+
+        return JsonResponse({'received_amount': received_amount})

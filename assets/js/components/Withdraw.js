@@ -8,9 +8,16 @@ import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
 import HelpBlock from 'react-bootstrap/lib/HelpBlock';
 import Col from 'react-bootstrap/lib/Col';
-import InputGroup from 'react-bootstrap/lib/InputGroup';
+import Decimal from 'decimal.js';
 
 export default class DepositDash extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            minWithdrawalAmount: '0.00000001',
+        };
+    }
+
     render() {
         if (this.state && this.state.rippleAddress && this.state.statusUrl) {
             return (
@@ -18,13 +25,12 @@ export default class DepositDash extends React.Component {
                     <Col sm={12} md={6}>
                         <b>You have initiated a transaction from Ripple to Dash</b>
                         <p>
-                            <span>Please transfer your Ripple tokens with a destination tag</span>
-                            {' '}
-                            <b>{this.state.destinationTag}</b>
-                            {' '}
-                            <span>to this address:</span>
-                            {' '}
-                            <b>{this.state.rippleAddress}</b>
+                            <span>Please transfer </span>
+                            <b>{this.state.dashToTransfer} </b>
+                            <span>Ripple token{this.state.dashToTransfer == 1 ? null : 's'} with a destination tag </span>
+                            <b>{this.state.destinationTag} </b>
+                            <span>to this address: </span>
+                            <b>{this.state.rippleAddress} </b>
                         </p>
                         <p>
                             You can track status of this transaction
@@ -41,26 +47,43 @@ export default class DepositDash extends React.Component {
                 <Col sm={12} md={6}>
                     <Form onSubmit={this.handleFormSubmit.bind(this)} id="withdrawal-form">
                         <DjangoCSRFToken/>
-                        <FormGroup controlId="id_dash_address">
-                            <Col md={12}>
-                                <ControlLabel>Enter your dash address, please:</ControlLabel>
-                                <InputGroup>
-                                    <FormControl type="text" name="dash_address"/>
-                                    <InputGroup.Button>
-                                        <Button type="submit">Start</Button>
-                                    </InputGroup.Button>
-                                </InputGroup>
-                                {this.getDashAddressError()}
-                                <FormControl.Feedback />
-                                <HelpBlock>
-                                    <Button bsStyle="link" href="/withdraw/how-to/">Need help?</Button>
-                                </HelpBlock>
-                            </Col>
+                        <FormGroup controlId="dash_address_input"
+                                   validationState={this.getFieldValidationState('dash_address')}>
+                            <ControlLabel>Your Dash Address:</ControlLabel>
+                            <FormControl type="text" name="dash_address" required />
+                            {this.getFieldError('dash_address')}
+                            <FormControl.Feedback />
                         </FormGroup>
+                        <FormGroup controlId="dash_to_transfer_input"
+                                   validationState={this.getFieldValidationState('dash_to_transfer')}>
+                            <ControlLabel>
+                                Withdrawal Amount (Min. {this.state.minWithdrawalAmount} DASH):
+                            </ControlLabel>
+                            <FormControl type="number"
+                                         name="dash_to_transfer"
+                                         onInput={this.changeReceiveAmountField.bind(this)}
+                                         step="0.00000001"
+                                         min={this.state.minWithdrawalAmount}
+                                         required/>
+                            {this.getFieldError('dash_to_transfer')}
+                            <FormControl.Feedback />
+                        </FormGroup>
+                        <FormGroup id="receive-amount-form-group">
+                            <ControlLabel>Receive Amount:</ControlLabel>
+                            <FormControl id="dash_to_receive_input" disabled/>
+                        </FormGroup>
+                        <Button block type="submit">Start</Button>
+                        <HelpBlock>
+                            <Button bsStyle="link" href="/withdraw/how-to/">Need help?</Button>
+                        </HelpBlock>
                     </Form>
                 </Col>
             </Panel>
         );
+    }
+
+    componentDidMount() {
+        window.addEventListener('load', () => {this.setState({minWithdrawalAmount: minAmounts.withdrawal})})
     }
 
     handleFormSubmit(event) {
@@ -74,20 +97,60 @@ export default class DepositDash extends React.Component {
                 this.setState({
                     rippleAddress: data['ripple_address'],
                     destinationTag: data['destination_tag'],
+                    dashToTransfer: data['dash_to_transfer'],
                     statusUrl: data['status_url'],
                 });
             } else {
-                $('#deposit-form .form-group').addClass('has-error');
-                this.setState({dashAddressError: data['dash_address_error']});
+                this.setState({formErrors: data['form_errors']});
             }
         }).always(() => {$('button[type="submit"]').prop('disabled', false);})
     }
 
-    getDashAddressError() {
-        if (this.state && this.state.dashAddressError) {
+    hasErrorsField(fieldName) {
+        return (this.state.formErrors && this.state.formErrors[fieldName]);
+    }
+
+    getFieldError(fieldName) {
+        if (this.hasErrorsField(fieldName)) {
             return (
-                <HelpBlock>{this.state.dashAddressError}</HelpBlock>
+                <HelpBlock>{this.state.formErrors[fieldName][0]}</HelpBlock>
             );
         }
+    }
+
+    getFieldValidationState(fieldName) {
+        if (this.hasErrorsField(fieldName)) {
+            return "error";
+        }
+    }
+
+    changeReceiveAmountField(event) {
+        const $amountField = $(event.target);
+        const $receiveAmountField = $('#dash_to_receive_input');
+        if (!$amountField.val()) {
+            $receiveAmountField.val('');
+            return;
+        }
+
+        Decimal.set({
+            rounding: Decimal.ROUND_DOWN,
+            toExpNeg: -9,
+        });
+        const amount = new Decimal($amountField.val());
+        // Truncate amount to 8 decimal places.
+        const truncatedAmount = amount.toDecimalPlaces(8);
+
+        if (!amount.equals(truncatedAmount)) {
+            $amountField.val(truncatedAmount);
+        }
+
+        // Set received amount.
+        if (truncatedAmount < Decimal(this.state.minWithdrawalAmount)) {
+            $receiveAmountField.val(0);
+            return;
+        }
+        $.getJSON(urls.getDashReceivedAmount, {'amount': truncatedAmount.toString()}).done((data) => {
+            $receiveAmountField.val(Decimal(data['received_amount']));
+        });
     }
 }

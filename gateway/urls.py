@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from django.contrib import admin
 from apps.core.views import (
+    GetDashReceivedAmountApiView,
     DepositSubmitApiView,
     DepositStatusApiView,
     GetPageDetailsView,
@@ -22,28 +23,33 @@ urlpatterns = [
             r'^deposit/'
             r'(?P<transaction_id>'
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
-            r'status-api/',
+            r'status-api/$',
             DepositStatusApiView.as_view(),
             name='deposit-status-api',
     ),
     url(
         r'^deposit/'
         r'(?P<transaction_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-'
-        r'[0-9a-f]{12})/',
+        r'[0-9a-f]{12})/$',
         GetPageDetailsView.as_view(),
         {'slug': 'status'},
         name='deposit-status',
     ),
     url(
-        r'^withdraw/(?P<transaction_id>[0-9]+)/status-api/',
+        r'^withdraw/(?P<transaction_id>[0-9]+)/status-api/$',
         WithdrawalStatusApiView.as_view(),
         name='withdrawal-status-api',
     ),
     url(
-        r'^withdraw/(?P<transaction_id>[0-9]+)/',
+        r'^withdraw/(?P<transaction_id>[0-9]+)/$',
         GetPageDetailsView.as_view(),
         {'slug': 'status'},
         name='withdrawal-status',
+    ),
+    url(
+        r'^get-dash-received-amount/$',
+        GetDashReceivedAmountApiView.as_view(),
+        name='get-dash-received-amount',
     ),
     url(r'^(?P<slug>[a-z0-9-]+?)/$',
         GetPageDetailsView.as_view(), name='page'),

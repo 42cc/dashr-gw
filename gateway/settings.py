@@ -106,6 +106,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.context_processors.minimal_amounts',
             ],
             'string_if_invalid': '<< MISSING VARIABLE "%s" >>' if DEBUG else ''
         },
@@ -159,9 +160,11 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+DATETIME_FORMAT = 'N j, Y, P e'
 
-USE_L10N = True
+USE_I18N = False
+
+USE_L10N = False
 
 USE_TZ = True
 
@@ -257,6 +260,8 @@ LOGGING = {
 }
 
 ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'fieldkeys')
+
+SOLO_CACHE = 'default'
 
 # Try to load settings from ``settings_local.py`` file
 try:

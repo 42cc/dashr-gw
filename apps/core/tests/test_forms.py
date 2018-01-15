@@ -8,7 +8,10 @@ class DepositTransactionModelFormTest(TestCase):
     def setUpTestData(cls):
         cls.form = forms.DepositTransactionModelForm
         cls.valid_form = cls.form(
-            data={'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7'},
+            data={
+                'ripple_address': 'rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+                'dash_to_transfer': 1,
+            },
         )
 
     def test_form_without_data(self):

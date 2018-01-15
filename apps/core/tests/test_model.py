@@ -71,6 +71,7 @@ class DepositModelTest(TestCase):
         RippleWalletCredentials.get_solo()
         cls.transaction = DepositTransaction.objects.create(
             ripple_address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
+            dash_to_transfer=1,
         )
 
     def test_inherits_base_transaction_model(self):
@@ -137,16 +138,29 @@ class WithdrawalModelTest(TestCase):
         self.assertTrue(hasattr(transaction, 'destination_tag'))
         self.assertEqual(transaction.destination_tag, transaction.id)
 
+    def test_get_current_state(self):
+        transaction = WithdrawalTransaction.objects.create(
+            dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
+        )
+        expected_state = transaction.get_state_display().format(
+            dash_to_transfer='1',
+            ripple_address=RippleWalletCredentials.get_solo().address,
+            destination_tag=transaction.destination_tag,
+        )
+        self.assertEqual(transaction.get_current_state(), expected_state)
+
     def test_state_change_instance_is_created_after_save(self):
         transaction = WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',
+            dash_to_transfer=1,
         )
         last_state_change = WithdrawalTransactionStateChange.objects.last()
         self.assertIsNotNone(last_state_change)
         self.assertEqual(last_state_change.transaction_id, transaction.id)
         self.assertEqual(
             last_state_change.current_state,
-            transaction.get_state_display(),
+            transaction.get_current_state(),
         )
 
 
@@ -160,14 +174,14 @@ class RippleWalletCredentialsModelTest(TestCase):
     def test_has_address(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'address'))
         self.assertIsInstance(
-            RippleWalletCredentials.objects.get().address,
+            RippleWalletCredentials.get_solo().address,
             unicode,
         )
 
     def test_has_secret(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'secret'))
         self.assertIsInstance(
-            RippleWalletCredentials.objects.get().secret,
+            RippleWalletCredentials.get_solo().secret,
             unicode,
         )
         self.assertIsInstance(

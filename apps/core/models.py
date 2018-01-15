@@ -2,11 +2,13 @@
 from __future__ import unicode_literals
 
 import uuid
+from decimal import Decimal
 
 from encrypted_fields import EncryptedCharField
 from solo.models import SingletonModel
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import formats
@@ -15,8 +17,41 @@ from django.utils.translation import ugettext as _
 from apps.core.validators import (
     dash_address_validator,
     ripple_address_validator,
+    withdrawal_min_dash_amount_validator,
 )
 from apps.core.wallet import DashWallet
+
+
+class GatewaySettings(SingletonModel):
+    gateway_fee_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name='Gateway fee (percentage)',
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    max_dash_miner_fee = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        default=Decimal('0.1'),
+        verbose_name='Dash - maximal miner fee',
+        help_text=(
+            'This value is used to calculate amount that is sent in '
+            'withdrawal transactions. <b>It should be the same as <code>'
+            'maxtxfee</code> of your Dash node.</b>'
+        ),
+        validators=[MinValueValidator(0)],
+    )
+    dash_required_confirmations = models.PositiveIntegerField(
+        default=6,
+        verbose_name='Dash - minimal confirmations',
+    )
+
+    def __str__(self):
+        return 'Gateway Settings'
+
+    class Meta:
+        verbose_name = 'Gateway Settings'
 
 
 class RippleWalletCredentials(SingletonModel):
@@ -63,12 +98,6 @@ class BaseTransaction(models.Model, TransactionStates):
         max_length=35,
         validators=[dash_address_validator],
     )
-    dash_to_transfer = models.DecimalField(
-        max_digits=16,
-        decimal_places=8,
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         abstract = True
@@ -84,18 +113,26 @@ class BaseTransaction(models.Model, TransactionStates):
             } for state in self.state_changes.order_by('datetime').all()
         ]
 
+    def get_normalized_dash_to_transfer(self):
+        if not isinstance(self.dash_to_transfer, Decimal):
+            return self.dash_to_transfer
+        # Based on https://docs.python.org/2.7/library/decimal.html#decimal-faq
+        if self.dash_to_transfer == self.dash_to_transfer.to_integral():
+            return self.dash_to_transfer.quantize(Decimal(1))
+        return self.dash_to_transfer.normalize()
+
 
 class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
         (TransactionStates.INITIATED, 'Initiated'),
         (
             TransactionStates.UNCONFIRMED,
-            'Received an incoming transaction ({dash_to_transfer} DASH). '
+            'Received an incoming transaction ({dash_to_transfer:f} DASH). '
             'Waiting for {confirmations_number} confirmations',
         ),
         (
             TransactionStates.CONFIRMED,
-            'Confirmed the incoming transaction ({dash_to_transfer} DASH). '
+            'Confirmed the incoming transaction ({dash_to_transfer:f} DASH). '
             'Initiated an outgoing one',
         ),
         (
@@ -120,6 +157,11 @@ class DepositTransaction(BaseTransaction):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+    )
 
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
@@ -146,9 +188,7 @@ class DepositTransaction(BaseTransaction):
 
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
-        ripple_address = RippleWalletCredentials.objects.only(
-            'address',
-        ).get().address
+        ripple_address = RippleWalletCredentials.get_solo().address
         DepositTransactionStateChange.objects.create(
             transaction=instance,
             current_state=instance.get_state_display().format(
@@ -161,12 +201,15 @@ class DepositTransaction(BaseTransaction):
 
 class WithdrawalTransaction(BaseTransaction):
     STATE_CHOICES = (
-        (TransactionStates.INITIATED, 'Initiated'),
+        (
+            TransactionStates.INITIATED,
+            'Initiated. Send {dash_to_transfer} Dash tokens to '
+            '{ripple_address} with a destination tag {destination_tag}',
+        ),
         (
             TransactionStates.CONFIRMED,
-            'Received an incoming transaction '
-            '{incoming_ripple_transaction_hash} ({dash_to_transfer} DASH). '
-            'Initiated an outgoing one',
+            'Received {dash_to_transfer} Dash tokens. Initiated an outgoing '
+            'transaction',
         ),
         (
             TransactionStates.PROCESSED,
@@ -175,8 +218,8 @@ class WithdrawalTransaction(BaseTransaction):
         ),
         (
             TransactionStates.OVERDUE,
-            'Received 0 Ripple transactions. Transactions with the '
-            'destination tag {destination_tag} are no longer tracked',
+            'Time expired. Transactions with the destination tag '
+            '{destination_tag} are no longer tracked',
         ),
         (
             TransactionStates.FAILED,
@@ -190,15 +233,17 @@ class WithdrawalTransaction(BaseTransaction):
         verbose_name='ID',
     )
 
+    dash_to_transfer = models.DecimalField(
+        max_digits=16,
+        decimal_places=8,
+        validators=[withdrawal_min_dash_amount_validator],
+    )
+
     state = models.PositiveSmallIntegerField(
         default=TransactionStates.INITIATED,
         choices=STATE_CHOICES,
     )
 
-    incoming_ripple_transaction_hash = models.CharField(
-        max_length=64,
-        blank=True,
-    )
     outgoing_dash_transaction_hash = models.CharField(
         max_length=64,
         blank=True,
@@ -211,14 +256,18 @@ class WithdrawalTransaction(BaseTransaction):
     def destination_tag(self):
         return self.id
 
+    def get_current_state(self):
+        values = self.__dict__
+        values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
+        values['destination_tag'] = self.destination_tag
+        values['ripple_address'] = RippleWalletCredentials.get_solo().address
+        return self.get_state_display().format(**values)
+
     @staticmethod
     def post_save_signal_handler(instance, **kwargs):
         WithdrawalTransactionStateChange.objects.create(
             transaction=instance,
-            current_state=instance.get_state_display().format(
-                destination_tag=instance.destination_tag,
-                **instance.__dict__
-            ),
+            current_state=instance.get_current_state(),
         )
 
 
