@@ -9,6 +9,7 @@ import FormControl from 'react-bootstrap/lib/FormControl';
 import ControlLabel from 'react-bootstrap/lib/ControlLabel';
 import HelpBlock from 'react-bootstrap/lib/HelpBlock';
 import Col from 'react-bootstrap/lib/Col';
+import { LinkContainer } from 'react-router-bootstrap';
 
 import Transaction from './Transaction';
 
@@ -56,7 +57,9 @@ export default class Deposit extends Transaction {
                             </FormGroup>
                             <Button block type="submit">Start</Button>
                             <HelpBlock>
-                                <Button bsStyle="link" href="/deposit/how-to/">Need help?</Button>
+                                <LinkContainer to="/deposit/how-to/">
+                                    <Button bsStyle="link">Need help?</Button>
+                                </LinkContainer>
                             </HelpBlock>
                         </Form>
                     </Col>
