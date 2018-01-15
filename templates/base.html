@@ -1,63 +1,50 @@
-<!DOCTYPE html>
 {% load staticfiles %}
 {% load compress %}
 {% load render_bundle from webpack_loader %}
 
+<!DOCTYPE html>
 <html lang="en" class="no-js">
 <head>
-	<title>{% block title %}DASH Rippe Gateway{% endblock %}</title>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="">
-	<meta name="author" content="">
-	{% include "favicon.html" %}
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{% compress css %}
-		<!-- Bootstrap: https://bootswatch.com/ -->
-		<link type="text/css" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-		<!-- End Bootstrap -->
+  <title>DASH Ripple Gateway</title>
 
-		<link type="text/less" rel="stylesheet" href="{% static 'less/base.less' %}">
-		{% block head_css %}{% endblock head_css %}
-	{% endcompress %}
+  <link type="text/css" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  {% compress css %}
+    <link type="text/less" rel="stylesheet" href="{% static 'less/base.less' %}">
+  {% endcompress %}
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-	<!-- Bootstrap -->
-	<script src="{% static 'js/libs/bootstrap.min.js' %}"></script>
-	<!-- End Bootstrap -->
-	{% compress js inline %}
-		{% block head_js %}
-		{% endblock head_js %}
-	{% endcompress %}
-
-	<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-	<!--[if lt IE 9]>
-	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!--[if lt IE 9]>
+    <script src="{% static 'js/libs/html5shiv.min.js' %}"></script>
+    <script src="{% static 'js/libs/respond.min.js' %}"></script>
+  <![endif]-->
 </head>
 
-	<body>
-		<div id="root">
-			{% render_bundle "main" %}
-		</div>
+<body>
+  <div id="root">
+    {% render_bundle "main" %}
+  </div>
 
-		{% compress js inline %}
-            <script>
-                var urls = {
-                    submit: {
-                        deposit: '{% url 'submit-deposit' %}',
-                        withdrawal: '{% url 'submit-withdrawal' %}',
-                    },
-                    getReceivedAmount: '{% url 'get-received-amount' %}',
-                };
-                var minAmounts = {
-                    deposit: '{{ minimal_deposit_amount }}',
-                    withdrawal: '{{ minimal_withdrawal_amount }}',
-                };
-            </script>
-			{% block body_js %}{% endblock body_js %}
-		{% endcompress %}
-	</body>
+  {% compress js inline %}
+    <script>
+        var urls = {
+            submit: {
+                deposit: '{% url 'submit-deposit' %}',
+                withdrawal: '{% url 'submit-withdrawal' %}',
+            },
+            getReceivedAmount: '{% url 'get-received-amount' %}',
+        };
+        var minAmounts = {
+            deposit: '{{ minimal_deposit_amount }}',
+            withdrawal: '{{ minimal_withdrawal_amount }}',
+        };
+    </script>
+  {% endcompress %}
+
+  <script src="{% static 'js/libs/jquery-1.12.4.min.js' %}"></script>
+  <script src="{% static 'js/libs/bootstrap.min.js' %}"></script>
+</body>
 </html>
-
