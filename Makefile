@@ -57,6 +57,7 @@ install:
 
 post-install: webpack
 	$(MAKE) migrate
+	$(MANAGE) loaddata initial_pages.json
 
 webpack:
 	webpack --config webpack.config.js

@@ -12,7 +12,6 @@ django-appconf==1.0.2     # via django-compressor
 django-ckeditor==5.4.0
 django-compressor==2.2
 django-encrypted-fields==1.1.2
-django-fsm==2.6.0
 django-js-asset==0.1.1    # via django-ckeditor
 django-model-utils==3.1.1  # via django-ripple-api
 django-ripple_api==0.0.48
