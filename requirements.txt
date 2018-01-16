@@ -14,7 +14,7 @@ django-cache-url==2.0.0
 django-ckeditor==5.4.0
 django-compressor==2.2
 django-encrypted-fields==1.1.2
-django-js-asset==0.1.1    # via django-ckeditor
+django-js-asset==1.0.0    # via django-ckeditor
 django-model-utils==3.1.1  # via django-ripple-api
 django-redis==4.8.0
 django-ripple_api==0.0.48
