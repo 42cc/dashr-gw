@@ -67,7 +67,7 @@ webpack-watch:
 
 collectstatic:
 	@echo Collecting static
-	$(MANAGE) collectstatic --noinput
+	$(MANAGE) collectstatic --noinput -i components -i less
 	@echo Done
 
 clean:
