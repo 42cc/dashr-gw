@@ -1,0 +1,78 @@
+version: '2'
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=gw_user
+      - POSTGRES_PASSWORD=gw_pass
+      - POSTGRES_DB=gateway
+    ports:
+      - '127.0.0.1:5432:5432'
+
+  # Redis
+  redis:
+    image: redis
+    hostname: redis
+    ports:
+      - '6379:6379'
+
+  # RabbitMQ
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5672:5672"  # we forward this port because it's useful for debugging
+      - "15672:15672"  # here, we can access rabbitmq management plugin
+
+  # Django Web Server
+  web:
+    build: .
+    command: make run
+    environment:
+      - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
+      - DEFAULT_FROM_EMAIL=noreply@example.com
+      - REDIS_URL=redis://redis:6379/0
+    links:
+      - db
+      - rabbit
+      - redis
+    depends_on:
+      - db
+      - dashd
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/app:Z
+
+  # Celery Worker
+  worker:
+    build: .
+    command: make worker
+    environment:
+      - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
+      - DEFAULT_FROM_EMAIL=noreply@example.com
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app:Z
+    links:
+      - db
+      - rabbit
+      - redis
+    depends_on:
+     - db
+     - dashd
+
+  # Dashd
+  dashd:
+    image: dashpay/dashd
+    environment:
+      - TESTNET=1
+    ports:
+      - '9999:9999'
+      - '127.0.0.1:9998:9998'
+    volumes:
+      - .dashd:/dash

@@ -8,12 +8,15 @@ amqp==2.2.2               # via kombu
 billiard==3.5.0.3         # via celery
 celery==4.1.0
 configparser==3.5.0       # via flake8
+dj-database-url==0.4.2
 django-appconf==1.0.2     # via django-compressor
+django-cache-url==2.0.0
 django-ckeditor==5.4.0
 django-compressor==2.2
 django-encrypted-fields==1.1.2
 django-js-asset==0.1.1    # via django-ckeditor
 django-model-utils==3.1.1  # via django-ripple-api
+django-redis==4.8.0
 django-ripple_api==0.0.48
 django-solo==1.1.2
 django-webpack-loader==0.5.0
@@ -34,6 +37,7 @@ python-bitcoinrpc==1.0
 python-keyczar==0.716     # via django-encrypted-fields
 pytz==2017.3              # via celery, django
 rcssmin==1.0.6            # via django-compressor
+redis==2.10.6             # via django-redis
 requests==2.2.1           # via django-ripple-api
 rjsmin==1.0.12            # via django-compressor
 six==1.11.0               # via mock
