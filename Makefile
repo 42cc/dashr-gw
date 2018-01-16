@@ -55,7 +55,8 @@ install:
 	npm install
 	pip install -r requirements.txt
 
-post-install: webpack
+post-install:
+	webpack -p
 	$(MAKE) migrate
 	$(MANAGE) loaddata initial_pages.json
 
