@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import uuid
+from datetime import timedelta
 
 import six
 from encrypted_fields import EncryptedCharField
@@ -15,6 +16,7 @@ from django.utils import formats
 from apps.core.models import (
     DepositTransaction,
     DepositTransactionStateChange,
+    GatewaySettings,
     RippleWalletCredentials,
     Page,
     BaseTransaction,
@@ -116,6 +118,15 @@ class DepositModelTest(TestCase):
             self.transaction.get_current_state(),
         )
 
+    def test_get_overdue_datetime(self):
+        expiration_minutes = (
+            GatewaySettings.get_solo().transaction_expiration_minutes
+        )
+        self.assertEqual(
+            self.transaction.get_overdue_datetime(),
+            self.transaction.timestamp + timedelta(minutes=expiration_minutes),
+        )
+
     def test_get_state_history(self):
         self.transaction.save()
         state_changes = DepositTransactionStateChange.objects.order_by(
@@ -154,6 +165,10 @@ class WithdrawalModelTest(TestCase):
             dash_to_transfer='1',
             ripple_address=RippleWalletCredentials.get_solo().address,
             destination_tag=transaction.destination_tag,
+            overdue_datetime=formats.date_format(
+                transaction.get_overdue_datetime(),
+                'DATETIME_FORMAT',
+            ),
         )
         self.assertEqual(transaction.get_current_state(), expected_state)
 
