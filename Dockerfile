@@ -3,7 +3,7 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /usr/src/app/
 
-COPY requirements.txt package.json /usr/src/app/
+COPY requirements.txt package.json package-lock.json /usr/src/app/
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt install -y nodejs python-keyczar \
