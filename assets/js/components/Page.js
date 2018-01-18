@@ -12,6 +12,10 @@ export default class Page extends React.Component {
         this.loadPage(this.props.match.url);
     }
 
+    componentWillReceiveProps(props) {
+        this.loadPage(props.match.url);
+    }
+
     render() {
         if (!this.state || this.state.page === 'undefined') {
             return 'Page does not exists';
