@@ -43,7 +43,7 @@ credentials [here](https://ripple.com/build/xrp-test-net/).
 ## Tests
 Run tests:
 ```sh
-docker exec dashripplegw_web_1 make test
+docker run --rm dashripplegw_web make test
 ```
 
 ## License
