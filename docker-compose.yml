@@ -91,7 +91,7 @@ services:
     image: dashpay/dashd
     restart: always
     environment:
-      - TESTNET=0
+      #- TESTNET=1  # Uncomment to use Dash test net.
       - DISABLEWALLET=0
       - RPCUSER=rpcuser
       - RPCPASSWORD=rpcpassword
@@ -106,7 +106,8 @@ services:
     ports:
       - '51235:51235'
     volumes:
-      - ./config/rippled.cfg:/etc/rippled.cfg
+      - ./config/rippled.cfg:/etc/rippled.cfg  # Comment to use Ripple test net.
+      #- ./config/rippled-testnet.cfg:/etc/rippled.cfg  # Uncomment to use Ripple test net.
       - rippled-data:/data
     command: --conf /etc/rippled.cfg
 
