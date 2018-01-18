@@ -32,6 +32,10 @@ class IndexView(TemplateView):
     """
     template_name = 'base.html'
 
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super(IndexView, self).dispatch(*args, **kwargs)
+
 
 class GetPageDetailsView(BaseDetailView):
     """
