@@ -1,11 +1,11 @@
 # Dash Ripple Gateway
-A proof-of-concept DASH-Ripple gateway with no KYC created basing on
+A proof-of-concept DASH-Ripple gateway with no KYC, created according to
 [the Dash budget proposal](https://www.dashcentral.org/p/OpenSourceRippleGw).
 
 ## Quick Start
-The project uses Docker and Docker Compose. You have to have them
+The project uses Docker and Docker Compose. You must have them
 installed to run a gateway (highly recommended to use the latest
-versions of them).
+versions).
 
 1. Create volumes for data of dashd and rippled:
 ```sh
