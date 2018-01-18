@@ -336,13 +336,21 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
             value='1',
         )
 
-    def test_modifies_transaction_if_ripple_transaction_exists(self):
+    @patch('apps.core.tasks.send_dash_transaction.delay')
+    def test_modifies_transaction_if_ripple_transaction_exists(
+        self,
+        patched_send_dash_transaction_task_delay,
+    ):
         self.create_ripple_transaction()
         tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
 
-    def test_checks_amount_of_all_transactions_with_destination_tag(self):
+    @patch('apps.core.tasks.send_dash_transaction.delay')
+    def test_checks_amount_of_all_transactions_with_destination_tag(
+        self,
+        patched_send_dash_transaction_task_delay,
+    ):
         self.transaction.dash_to_transfer = 2
         self.transaction.save()
         self.create_ripple_transaction()

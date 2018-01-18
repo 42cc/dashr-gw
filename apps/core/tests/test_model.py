@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import uuid
 
+import six
 from encrypted_fields import EncryptedCharField
 from mock import patch
 from solo.models import SingletonModel
@@ -181,14 +182,14 @@ class RippleWalletCredentialsModelTest(TestCase):
         self.assertTrue(hasattr(RippleWalletCredentials, 'address'))
         self.assertIsInstance(
             RippleWalletCredentials.get_solo().address,
-            unicode,
+            six.string_types,
         )
 
     def test_has_secret(self):
         self.assertTrue(hasattr(RippleWalletCredentials, 'secret'))
         self.assertIsInstance(
             RippleWalletCredentials.get_solo().secret,
-            unicode,
+            six.string_types,
         )
         self.assertIsInstance(
             RippleWalletCredentials._meta.get_field('secret'),
