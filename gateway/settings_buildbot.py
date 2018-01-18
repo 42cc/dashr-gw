@@ -1,5 +1,9 @@
 from settings import *  # noqa
 
+ADMINS = (
+    ('Yaroslav Luzin', 'jardev@gmail.com'),
+)
+MANAGERS = ADMINS
 
 DATABASES = {
     'default': {

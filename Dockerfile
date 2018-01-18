@@ -1,19 +1,19 @@
 FROM python:2.7
 ENV PYTHONUNBUFFERED 1
 
-# update the repository sources list
-# and install dependencies
-RUN apt-get update \
-    && apt-get install -y nodejs npm curl yui-compressor node-less \
-    && apt-get -y autoclean
+WORKDIR /usr/src/app/
 
-ADD requirements.txt /app/
-RUN pip install -r /app/requirements.txt
+COPY requirements.txt package.json /usr/src/app/
 
-ADD . /app
-WORKDIR /app
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
+    && apt install -y nodejs python-keyczar \
+    && npm install -g less webpack \
+    && pip install --no-cache-dir -r requirements.txt uwsgi \
+    && npm install
 
-EXPOSE 8000
-ENV PORT 8000
+COPY . /usr/src/app/
 
-CMD ["uwsgi", "/app/gateway/wsgi/uwsgi.ini"]
+RUN (keyczart create --location=fieldkeys --purpose=crypt \
+    && keyczart addkey --location=fieldkeys --status=primary --size=256) || true
+
+RUN webpack -p && make collectstatic

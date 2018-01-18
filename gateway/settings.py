@@ -29,20 +29,24 @@ SECRET_KEY = 'jksd@$=t_y2_epxck%_^%6mk$l8e6&mq)*++s%q6%yyk3!1v&x'
 DASHD_RPCUSER = 'rpcuser'
 DASHD_RPCPASSWORD = 'rpcpassword'
 DASHD_ACCOUNT_NAME = 'gateway'
+DASHD_URL = os.environ.get(
+    'DASHD_URL',
+    'http://{}:{}@127.0.0.1:19998'.format(DASHD_RPCUSER, DASHD_RPCPASSWORD),
+)
 
 RIPPLE_API_DATA = [
-    {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
+    {
+        'RIPPLE_API_URL': os.environ.get(
+            'RIPPLED_URL',
+            'https://s1.ripple.com:51234',
+        ),
+    },
 ]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
-ADMINS = (
-    ('Yaroslav Luzin', 'jardev@gmail.com'),
-)
-MANAGERS = ADMINS
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
@@ -108,7 +112,9 @@ if os.environ.get('REDIS_URL'):
 DATABASES = {
     'default': dj_database_url.config(
         default='postgres://gw_user:gw_pass@localhost:5432/gateway',
-        conn_max_age=600)}
+        conn_max_age=600,
+    ),
+}
 
 
 # Password validation
@@ -270,8 +276,7 @@ RABBIT_HOSTNAME = os.environ.get('RABBIT_PORT_5672_TCP', 'rabbit')
 if RABBIT_HOSTNAME.startswith('tcp://'):
     RABBIT_HOSTNAME = RABBIT_HOSTNAME.split('//')[1]
 
-BROKER_URL = os.environ.get('BROKER_URL',
-                            '')
+BROKER_URL = os.environ.get('BROKER_URL', '')
 if not BROKER_URL:
     BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
         user=os.environ.get('RABBIT_ENV_USER', 'admin'),

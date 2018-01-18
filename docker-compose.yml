@@ -2,17 +2,19 @@ version: '2'
 services:
   # PostgreSQL Database
   db:
-    image: postgres
+    image: postgres:10-alpine
+    restart: always
     environment:
       - POSTGRES_USER=gw_user
       - POSTGRES_PASSWORD=gw_pass
       - POSTGRES_DB=gateway
     ports:
-      - '127.0.0.1:5432:5432'
+      - '5432:5432'
 
   # Redis
   redis:
-    image: redis
+    image: redis:4-alpine
+    restart: always
     hostname: redis
     ports:
       - '6379:6379'
@@ -20,7 +22,8 @@ services:
   # RabbitMQ
   rabbit:
     hostname: rabbit
-    image: rabbitmq
+    image: rabbitmq:3-alpine
+    restart: always
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=mypass
@@ -28,51 +31,87 @@ services:
       - "5672:5672"  # we forward this port because it's useful for debugging
       - "15672:15672"  # here, we can access rabbitmq management plugin
 
+  # Nginx
+  nginx:
+    image: nginx:1.13-alpine
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/gateway.conf
+    volumes_from:
+      - web
+    depends_on:
+      - web
+
   # Django Web Server
   web:
     build: .
-    command: make run
+    command: uwsgi /usr/src/app/config/uwsgi.ini
+    restart: always
     environment:
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
       - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
       - DEFAULT_FROM_EMAIL=noreply@example.com
       - REDIS_URL=redis://redis:6379/0
-    links:
-      - db
-      - rabbit
-      - redis
+      - RIPPLED_URL=http://rippled:51235
     depends_on:
       - db
       - dashd
-    ports:
-      - '8000:8000'
+      - rippled
+      - rabbit
+      - worker
+    expose:
+      - '8000'
     volumes:
-      - .:/app:Z
+      - .:/usr/src/app:Z
 
   # Celery Worker
   worker:
     build: .
     command: make worker
+    restart: always
     environment:
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
       - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
       - DEFAULT_FROM_EMAIL=noreply@example.com
       - REDIS_URL=redis://redis:6379/0
+      - RIPPLED_URL=http://rippled:51235
     volumes:
-      - .:/app:Z
-    links:
+      - .:/usr/src/app:Z
+    depends_on:
       - db
+      - dashd
+      - rippled
       - rabbit
       - redis
-    depends_on:
-     - db
-     - dashd
 
   # Dashd
   dashd:
     image: dashpay/dashd
+    restart: always
     environment:
-      - TESTNET=1
+      - TESTNET=0
+      - DISABLEWALLET=0
+      - RPCUSER=rpcuser
+      - RPCPASSWORD=rpcpassword
     ports:
-      - '9999:9999'
-      - '127.0.0.1:9998:9998'
+      - '9998:9998'
     volumes:
-      - .dashd:/dash
+      - dashd-data:/dash
+
+  rippled:
+    image: gatehub/rippled
+    restart: always
+    ports:
+      - '51235:51235'
+    volumes:
+      - ./config/rippled.cfg:/etc/rippled.cfg
+      - rippled-data:/data
+    command: --conf /etc/rippled.cfg
+
+volumes:
+  dashd-data:
+    external: true
+  rippled-data:
+    external: true
