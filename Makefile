@@ -44,7 +44,6 @@ test: flake8
 	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
 
 pre-install:
-	-sudo apt-get install yui-compressor
 	sudo npm install -g less
 	mkdir fieldkeys
 	sudo apt-get install python-keyczar

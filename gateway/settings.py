@@ -161,13 +161,14 @@ STATICFILES_DIRS = (
 )
 
 # DJANGO COMPRESS
-PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
-PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
+COMPRESS_ENABLED = True
 COMPRESS_PRECOMPILERS = (
-    ('text/less', 'lessc {infile} {outfile} --autoprefix="last 2 versions"'),
+    ('text/less', 'lessc {infile} {outfile} --autoprefix=">0%"'),
 )
-COMPRESS_YUI_BINARY = ('java -jar "/usr/share/yui-compressor/'
-                       'yui-compressor.jar"')
+COMPRESS_CSS_FILTERS = (
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.CSSMinFilter'
+)
 
 # MEDIA
 MEDIA_URL = '/media/'
