@@ -1,0 +1,118 @@
+version: '2'
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:10-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=gw_user
+      - POSTGRES_PASSWORD=gw_pass
+      - POSTGRES_DB=gateway
+    ports:
+      - '5432:5432'
+
+  # Redis
+  redis:
+    image: redis:4-alpine
+    restart: always
+    hostname: redis
+    ports:
+      - '6379:6379'
+
+  # RabbitMQ
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3-alpine
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5672:5672"  # we forward this port because it's useful for debugging
+      - "15672:15672"  # here, we can access rabbitmq management plugin
+
+  # Nginx
+  nginx:
+    image: nginx:1.13-alpine
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/gateway.conf
+    volumes_from:
+      - web
+    depends_on:
+      - web
+
+  # Django Web Server
+  web:
+    build: .
+    command: uwsgi /usr/src/app/config/uwsgi.ini
+    restart: always
+    environment:
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
+      - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
+      - DEFAULT_FROM_EMAIL=noreply@example.com
+      - REDIS_URL=redis://redis:6379/0
+      - RIPPLED_URL=http://rippled:51235
+    depends_on:
+      - db
+      - dashd
+      - rippled
+      - rabbit
+      - worker
+    expose:
+      - '8000'
+    volumes:
+      - .:/usr/src/app:Z
+
+  # Celery Worker
+  worker:
+    build: .
+    command: make worker
+    restart: always
+    environment:
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
+      - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
+      - DEFAULT_FROM_EMAIL=noreply@example.com
+      - REDIS_URL=redis://redis:6379/0
+      - RIPPLED_URL=http://rippled:51235
+    volumes:
+      - .:/usr/src/app:Z
+    depends_on:
+      - db
+      - dashd
+      - rippled
+      - rabbit
+      - redis
+
+  # Dashd
+  dashd:
+    image: dashpay/dashd
+    restart: always
+    environment:
+      #- TESTNET=1  # Uncomment to use Dash test net.
+      - DISABLEWALLET=0
+      - RPCUSER=rpcuser
+      - RPCPASSWORD=rpcpassword
+    ports:
+      - '9998:9998'
+    volumes:
+      - dashd-data:/dash
+
+  rippled:
+    image: gatehub/rippled
+    restart: always
+    ports:
+      - '51235:51235'
+    volumes:
+      - ./config/rippled.cfg:/etc/rippled.cfg  # Comment to use Ripple test net.
+      #- ./config/rippled-testnet.cfg:/etc/rippled.cfg  # Uncomment to use Ripple test net.
+      - rippled-data:/data
+    command: --conf /etc/rippled.cfg
+
+volumes:
+  dashd-data:
+    external: true
+  rippled-data:
+    external: true

@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import sys
+import dj_database_url
+import django_cache_url
+from kombu import Exchange, Queue
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,20 +29,24 @@ SECRET_KEY = 'jksd@$=t_y2_epxck%_^%6mk$l8e6&mq)*++s%q6%yyk3!1v&x'
 DASHD_RPCUSER = 'rpcuser'
 DASHD_RPCPASSWORD = 'rpcpassword'
 DASHD_ACCOUNT_NAME = 'gateway'
+DASHD_URL = os.environ.get(
+    'DASHD_URL',
+    'http://{}:{}@127.0.0.1:19998'.format(DASHD_RPCUSER, DASHD_RPCPASSWORD),
+)
 
 RIPPLE_API_DATA = [
-    {'RIPPLE_API_URL': 'https://s1.ripple.com:51234'},
+    {
+        'RIPPLE_API_URL': os.environ.get(
+            'RIPPLED_URL',
+            'https://s1.ripple.com:51234',
+        ),
+    },
 ]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
-ADMINS = (
-    ('Yaroslav Luzin', 'jardev@gmail.com'),
-)
-MANAGERS = ADMINS
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
@@ -92,20 +100,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gateway.wsgi.application'
 
+CACHES = {'default': django_cache_url.config()}
+
+if os.environ.get('REDIS_URL'):
+    CACHES['default'] = {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL')}
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gateway',
-        'USER': 'gw_user',
-        'PASSWORD': 'gw_pass',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgres://gw_user:gw_pass@localhost:5432/gateway',
+        conn_max_age=600,
+    ),
 }
+if 'test' in sys.argv:
+    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -157,13 +169,14 @@ STATICFILES_DIRS = (
 )
 
 # DJANGO COMPRESS
-PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
-PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
+COMPRESS_ENABLED = True
 COMPRESS_PRECOMPILERS = (
-    ('text/less', 'lessc {infile} {outfile} --autoprefix="last 2 versions"'),
+    ('text/less', 'lessc {infile} {outfile} --autoprefix=">0%"'),
 )
-COMPRESS_YUI_BINARY = ('java -jar "/usr/share/yui-compressor/'
-                       'yui-compressor.jar"')
+COMPRESS_CSS_FILTERS = (
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.CSSMinFilter'
+)
 
 # MEDIA
 MEDIA_URL = '/media/'
@@ -252,6 +265,69 @@ LOGGING = {
 ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, 'fieldkeys')
 
 SOLO_CACHE = 'default'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+
+# Redis
+REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'redis')
+
+RABBIT_HOSTNAME = os.environ.get('RABBIT_PORT_5672_TCP', 'rabbit')
+
+if RABBIT_HOSTNAME.startswith('tcp://'):
+    RABBIT_HOSTNAME = RABBIT_HOSTNAME.split('//')[1]
+
+BROKER_URL = os.environ.get('BROKER_URL', '')
+if not BROKER_URL:
+    BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
+        user=os.environ.get('RABBIT_ENV_USER', 'admin'),
+        password=os.environ.get('RABBIT_ENV_RABBITMQ_PASS', 'mypass'),
+        hostname=RABBIT_HOSTNAME,
+        vhost=os.environ.get('RABBIT_ENV_VHOST', ''))
+
+# We don't want to have dead connections stored on rabbitmq,
+# so we have to negotiate using heartbeats
+BROKER_HEARTBEAT = '?heartbeat=30'
+if not BROKER_URL.endswith(BROKER_HEARTBEAT):
+    BROKER_URL += BROKER_HEARTBEAT
+
+BROKER_POOL_LIMIT = 1
+BROKER_CONNECTION_TIMEOUT = 10
+
+# Celery configuration
+
+# configure queues, currently we have only one
+CELERY_DEFAULT_QUEUE = 'default'
+CELERY_QUEUES = (
+    Queue('default', Exchange('default'), routing_key='default'),
+)
+
+# Sensible settings for celery
+CELERY_ALWAYS_EAGER = False
+CELERY_ACKS_LATE = True
+CELERY_TASK_PUBLISH_RETRY = True
+CELERY_DISABLE_RATE_LIMITS = False
+
+# By default we will ignore result
+# If you want to see results and try out tasks interactively,
+# change it to False
+# Or change this setting on tasks level
+CELERY_IGNORE_RESULT = True
+CELERY_SEND_TASK_ERROR_EMAILS = False
+CELERY_TASK_RESULT_EXPIRES = 600
+
+# Set redis as celery result backend
+CELERY_RESULT_BACKEND = 'redis://%s:%d/%d' % (REDIS_HOST, REDIS_PORT, REDIS_DB)
+CELERY_REDIS_MAX_CONNECTIONS = 1
+
+# Don't use pickle as serializer, json is much safer
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ['application/json']
+
+CELERYD_HIJACK_ROOT_LOGGER = False
+CELERYD_PREFETCH_MULTIPLIER = 1
+CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 # Try to load settings from ``settings_local.py`` file
 try:

@@ -11,9 +11,7 @@ export default class Transaction extends React.Component {
     }
 
     componentDidMount() {
-        window.addEventListener('load', () => {
-            this.setState({minAmount: minAmounts[this.transactionType]});
-        })
+        this.setState({minAmount: minAmounts[this.transactionType]});
     }
 
     handleFormSubmit(event) {

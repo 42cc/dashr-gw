@@ -1,3 +1,4 @@
+import logging
 import socket
 from datetime import timedelta
 
@@ -13,6 +14,7 @@ from gateway import celery_app
 
 class CeleryTransactionBaseTaskTest(TestCase):
     def setUp(self):
+        logging.disable(logging.CRITICAL)
         models.RippleWalletCredentials.get_solo()
 
     @patch('apps.core.models.DashWallet.get_new_address')
@@ -43,6 +45,7 @@ class CeleryTransactionBaseTaskTest(TestCase):
 class MonitorDashToRippleTransactionTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
+        logging.disable(logging.CRITICAL)
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
         models.RippleWalletCredentials.get_solo()
         patched_get_new_address.return_value = (
@@ -144,6 +147,7 @@ class MonitorDashToRippleTransactionTaskTest(TestCase):
 class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
+        logging.disable(logging.CRITICAL)
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
         models.RippleWalletCredentials.get_solo()
         patched_get_new_address.return_value = (
@@ -200,6 +204,7 @@ class MonitorTransactionConfirmationsNumberTaskTest(TestCase):
 class SendRippleTransactionTaskTest(TestCase):
     @patch('apps.core.models.DashWallet.get_new_address')
     def setUp(self, patched_get_new_address):
+        logging.disable(logging.CRITICAL)
         models.RippleWalletCredentials.objects.create(
             address='rp2PaYDxVwDvaZVLEQv7bHhoFQEyX1mEx7',
         )
@@ -313,6 +318,7 @@ class SendRippleTransactionTaskTest(TestCase):
 
 class MonitorRippleToDashTransactionTaskTest(TestCase):
     def setUp(self):
+        logging.disable(logging.CRITICAL)
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
         self.ripple_credentials = models.RippleWalletCredentials.get_solo()
         self.transaction = models.WithdrawalTransaction.objects.create(
@@ -330,13 +336,21 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
             value='1',
         )
 
-    def test_modifies_transaction_if_ripple_transaction_exists(self):
+    @patch('apps.core.tasks.send_dash_transaction.delay')
+    def test_modifies_transaction_if_ripple_transaction_exists(
+        self,
+        patched_send_dash_transaction_task_delay,
+    ):
         self.create_ripple_transaction()
         tasks.monitor_ripple_to_dash_transaction.apply((self.transaction.id,))
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.state, self.transaction.CONFIRMED)
 
-    def test_checks_amount_of_all_transactions_with_destination_tag(self):
+    @patch('apps.core.tasks.send_dash_transaction.delay')
+    def test_checks_amount_of_all_transactions_with_destination_tag(
+        self,
+        patched_send_dash_transaction_task_delay,
+    ):
         self.transaction.dash_to_transfer = 2
         self.transaction.save()
         self.create_ripple_transaction()
@@ -387,6 +401,7 @@ class MonitorRippleToDashTransactionTaskTest(TestCase):
 
 class SendDashTransactionTaskTest(TestCase):
     def setUp(self):
+        logging.disable(logging.CRITICAL)
         celery_app.conf.update(CELERY_ALWAYS_EAGER=True)
         self.transaction = models.WithdrawalTransaction.objects.create(
             dash_address='yBVKPLuULvioorP8d1Zu8hpeYE7HzVUtB9',

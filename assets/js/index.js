@@ -31,11 +31,9 @@ class App extends React.Component {
                                    component={props => <Status {...props} transactionType='Withdrawal'/>}/>
 
                             <Route path="/:slug/how-to/"
-                                   component={props => <Page {...props} wrapped='true'/>}/>
+                                   component={props => <Page {...props} isWrapped={true}/>}/>
                             <Route path="/:slug/"
-                                   component={props => <Page {...props} wrapped='false' />} />
-
-
+                                   component={props => <Page {...props} isWrapped={false}/>}/>
                         </Switch>
                     </div>
                     <Footer/>

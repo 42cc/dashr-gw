@@ -44,7 +44,6 @@ test: flake8
 	TESTING=1 PYTHONWARNINGS=ignore $(MANAGE) test $(TEST_OPTIONS) $(TEST_APP)
 
 pre-install:
-	-sudo apt-get install yui-compressor
 	sudo npm install -g less
 	mkdir fieldkeys
 	sudo apt-get install python-keyczar
@@ -55,8 +54,10 @@ install:
 	npm install
 	pip install -r requirements.txt
 
-post-install: webpack
+post-install:
+	webpack -p
 	$(MAKE) migrate
+	$(MANAGE) loaddata initial_pages.json
 
 webpack:
 	webpack --config webpack.config.js
@@ -66,7 +67,7 @@ webpack-watch:
 
 collectstatic:
 	@echo Collecting static
-	$(MANAGE) collectstatic --noinput
+	$(MANAGE) collectstatic --noinput -i components -i less
 	@echo Done
 
 clean:

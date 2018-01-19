@@ -2,12 +2,12 @@
 from __future__ import unicode_literals
 
 import uuid
+from datetime import timedelta
 from decimal import Decimal
 
 from encrypted_fields import EncryptedCharField
 from solo.models import SingletonModel
 
-from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -106,6 +106,11 @@ class BaseTransaction(models.Model, TransactionStates):
     class Meta:
         abstract = True
 
+    def get_overdue_datetime(self):
+        return self.timestamp + timedelta(
+            minutes=GatewaySettings.get_solo().transaction_expiration_minutes,
+        )
+
     def get_state_history(self):
         return [
             {
@@ -130,7 +135,8 @@ class DepositTransaction(BaseTransaction):
     STATE_CHOICES = (
         (
             TransactionStates.INITIATED,
-            'Initiated. Send {dash_to_transfer} DASH to {dash_address}',
+            'Initiated. Send {dash_to_transfer} DASH to {dash_address} before '
+            '{overdue_datetime}',
         ),
         (
             TransactionStates.UNCONFIRMED,
@@ -196,6 +202,10 @@ class DepositTransaction(BaseTransaction):
     def get_current_state(self):
         values = self.__dict__
         values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
+        values['overdue_datetime'] = formats.date_format(
+            self.get_overdue_datetime(),
+            'DATETIME_FORMAT',
+        )
         values['confirmations_number'] = (
             GatewaySettings.get_solo().dash_required_confirmations
         )
@@ -217,7 +227,8 @@ class WithdrawalTransaction(BaseTransaction):
         (
             TransactionStates.INITIATED,
             'Initiated. Send {dash_to_transfer} Dash tokens to '
-            '{ripple_address} with a destination tag {destination_tag}',
+            '{ripple_address} with a destination tag {destination_tag} before '
+            '{overdue_datetime}',
         ),
         (
             TransactionStates.CONFIRMED,
@@ -272,6 +283,10 @@ class WithdrawalTransaction(BaseTransaction):
     def get_current_state(self):
         values = self.__dict__
         values['dash_to_transfer'] = self.get_normalized_dash_to_transfer()
+        values['overdue_datetime'] = formats.date_format(
+            self.get_overdue_datetime(),
+            'DATETIME_FORMAT',
+        )
         values['destination_tag'] = self.destination_tag
         values['ripple_address'] = RippleWalletCredentials.get_solo().address
         return self.get_state_display().format(**values)

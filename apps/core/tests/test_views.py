@@ -43,12 +43,9 @@ class GetPageDetailsViewTest(TestCase):
 
         content = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('success', content)
         self.assertIn('page', content)
-        self.assertTrue(content['success'])
-        self.assertEqual(content['page']['id'], self.page.pk)
-        self.assertEqual(content['page']['slug'], self.page.slug)
         self.assertEqual(content['page']['title'], self.page.title)
+        self.assertEqual(content['page']['description'], self.page.description)
 
     def test_getting_page_by_slug_invalid(self):
         """ Test getting page by invalid slug """
@@ -57,15 +54,7 @@ class GetPageDetailsViewTest(TestCase):
             reverse('page', kwargs={'slug': 'invalid'}),
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
-
-        content = json.loads(response.content)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('success', content)
-        self.assertIn('page', content)
-        self.assertIn('message', content)
-        self.assertFalse(content['success'])
-        self.assertEqual(content['message'], 'Page does not exists')
-        self.assertEqual(len(content['page']), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_page_non_ajax(self):
         """ Test getting page by valid slug """

@@ -1,0 +1,9 @@
+.*
+*.sqlite
+media
+node_modules
+fieldkeys/*
+static
+logs/*
+assets/bundles/
+webpack-stats.json

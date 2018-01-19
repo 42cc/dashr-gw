@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.forms.models import model_to_dict
 from django.views.generic import TemplateView, View
+from django.views.generic.detail import BaseDetailView
 from django.views.generic.edit import BaseFormView
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.vary import vary_on_headers
 
 from .utils import get_received_amount
 from .forms import DepositTransactionModelForm, WithdrawalTransactionModelForm
 from .models import (
     DepositTransaction,
+    GatewaySettings,
     Page,
+    RippleWalletCredentials,
     WithdrawalTransaction,
 )
 from .tasks import (
@@ -29,26 +32,38 @@ class IndexView(TemplateView):
     """
     template_name = 'base.html'
 
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super(IndexView, self).dispatch(*args, **kwargs)
 
-class GetPageDetailsView(View):
+
+class GetPageDetailsView(BaseDetailView):
     """
     View returns given by url serialized page instance
     """
-    def get(self, request, slug, **kwargs):
+    model = Page
+
+    def get(self, request, slug):
         if request.is_ajax():
-            ctx = {'page': [], 'success': True}
-            page = Page.objects.filter(slug=slug)
-
-            if not page.exists():
-                ctx['success'] = False
-                ctx['message'] = 'Page does not exists'
-            else:
-                ctx['page'] = model_to_dict(page[0])
-
-            return JsonResponse(ctx, safe=False)
+            page = self.get_object()
+            gateway_ripple_address = RippleWalletCredentials.get_solo().address
+            expiration_minutes = (
+                GatewaySettings.get_solo().transaction_expiration_minutes
+            )
+            response = {
+                'page': {
+                    'title': page.title,
+                    'description': page.description.format(
+                        gateway_ripple_address=gateway_ripple_address,
+                        transaction_expiration_minutes=expiration_minutes,
+                    ),
+                },
+            }
+            return JsonResponse(response, safe=False)
         return render(request, 'base.html')
 
     @method_decorator(ensure_csrf_cookie)
+    @method_decorator(vary_on_headers('X-Requested-With'))
     def dispatch(self, *args, **kwargs):
         return super(GetPageDetailsView, self).dispatch(*args, **kwargs)
 

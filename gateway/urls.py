@@ -20,19 +20,18 @@ urlpatterns = [
     url(r'^submit-withdrawal/$',
         WithdrawalSubmitApiView.as_view(), name='submit-withdrawal'),
     url(
-            r'^deposit/'
-            r'(?P<transaction_id>'
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
-            r'status-api/$',
-            DepositStatusApiView.as_view(),
-            name='deposit-status-api',
+        r'^deposit/'
+        r'(?P<transaction_id>'
+        r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/'
+        r'status-api/$',
+        DepositStatusApiView.as_view(),
+        name='deposit-status-api',
     ),
     url(
         r'^deposit/'
         r'(?P<transaction_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-'
         r'[0-9a-f]{12})/$',
-        GetPageDetailsView.as_view(),
-        {'slug': 'status'},
+        IndexView.as_view(),
         name='deposit-status',
     ),
     url(
@@ -42,8 +41,7 @@ urlpatterns = [
     ),
     url(
         r'^withdraw/(?P<transaction_id>[0-9]+)/$',
-        GetPageDetailsView.as_view(),
-        {'slug': 'status'},
+        IndexView.as_view(),
         name='withdrawal-status',
     ),
     url(
