@@ -50,7 +50,8 @@ services:
     command: uwsgi /usr/src/app/config/uwsgi.ini
     restart: always
     environment:
-      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998  # Comment to use Dash test net.
+      #- DASHD_URL=dashd://rpcuser:rpcpassword@dashd:19998  # Uncomment to use Dash test net.
       - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
       - DEFAULT_FROM_EMAIL=noreply@example.com
       - REDIS_URL=redis://redis:6379/0
@@ -72,7 +73,8 @@ services:
     command: make worker
     restart: always
     environment:
-      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998
+      - DASHD_URL=dashd://rpcuser:rpcpassword@dashd:9998  # Comment to use Dash test net.
+      #- DASHD_URL=dashd://rpcuser:rpcpassword@dashd:19998  # Uncomment to use Dash test net.
       - DATABASE_URL=postgres://gw_user:gw_pass@db/gateway
       - DEFAULT_FROM_EMAIL=noreply@example.com
       - REDIS_URL=redis://redis:6379/0
@@ -97,6 +99,7 @@ services:
       - RPCPASSWORD=rpcpassword
     ports:
       - '9998:9998'
+      - '19998:19998'
     volumes:
       - dashd-data:/dash
 
