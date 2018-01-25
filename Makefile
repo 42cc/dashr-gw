@@ -45,8 +45,9 @@ test: flake8
 
 pre-install:
 	sudo npm install -g less
-	mkdir fieldkeys
-	sudo apt-get install python-keyczar
+	$(MAKE) generate-keyczart
+
+generate-keyczart:
 	keyczart create --location=fieldkeys --purpose=crypt
 	keyczart addkey --location=fieldkeys --status=primary --size=256
 
