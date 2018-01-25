@@ -6,11 +6,15 @@ RUNSERVER_PORT=8000
 SETTINGS=gateway.settings_buildbot
 TEST_APP?=
 
+FIELDKEYS_PATH=../fieldkeys
 PYTHONPATH=$(CURDIR)
 
 MANAGE= PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admin.py
 
 test: buildbot_test
 
-buildbot_test: install webpack generate-keyczart
+create-fieldkeys-dir:
+	mkdir -p $(FIELDKEYS_PATH)
+
+buildbot_test: install webpack create-fieldkeys-dir generate-keyczart
 	echo "Buildbot placeholder"

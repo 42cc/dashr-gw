@@ -12,6 +12,7 @@ TEST_APP=apps.core
 APPS=apps
 flake8=flake8 --max-complexity=6 --exclude '*migrations*'
 
+FIELDKEYS_PATH=fieldkeys
 PYTHONPATH=$(CURDIR)
 MANAGE = PYTHONPATH=$(PYTHONPATH) DJANGO_SETTINGS_MODULE=$(SETTINGS) django-admin.py
 
@@ -48,8 +49,8 @@ pre-install:
 	$(MAKE) generate-keyczart
 
 generate-keyczart:
-	keyczart create --location=fieldkeys --purpose=crypt
-	keyczart addkey --location=fieldkeys --status=primary --size=256
+	keyczart create --location=$(FIELDKEYS_PATH) --purpose=crypt
+	keyczart addkey --location=$(FIELDKEYS_PATH) --status=primary --size=256
 
 install:
 	npm install
