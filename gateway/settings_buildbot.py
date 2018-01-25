@@ -13,4 +13,4 @@ DATABASES = {
 
 ALLOWED_HOSTS = ['dash-gw.s.42cc.co']
 
-ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, '../fieldkeys')
+ENCRYPTED_FIELDS_KEYDIR = os.path.join(BASE_DIR, '../fieldkeys')   # noqa
