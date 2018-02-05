@@ -1,0 +1,85 @@
+/*
+  Base styles
+*/
+html {
+  height: 100%;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  /* Padding by header and footer heights */
+  padding: 70px 0 60px;
+}
+
+/*
+  HEADER
+*/
+
+/*
+  FOOTER
+*/
+
+.footer {
+  color: #fff;
+  text-align: center;
+  line-height: 60px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
+
+/*
+  PANEL WRAPPER
+*/
+
+.panel-wrapper {
+  text-align: center;
+  margin-top: 5%;
+}
+
+/*
+  INDEX
+*/
+
+.panel-wrapper-main-menu {
+  margin: 12% auto;
+
+  .btn-landing {
+    margin: 5px 5%;
+  }
+}
+
+
+/*
+  PANEL CONTAINER
+*/
+
+.panel-wrapper-container {
+  .panel-heading {
+      font-size: 24px;
+  }
+
+  .panel-body {
+    div[class^='col'] {
+      text-align: left;
+      float: none;
+      margin: 0 auto;
+
+      .help-block .btn-link {
+        padding: 0;
+      }
+    }
+  }
+
+  #receive-amount-form-group {
+    opacity: 0.8;
+  }
+}
+
