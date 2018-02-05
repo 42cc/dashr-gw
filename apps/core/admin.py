@@ -15,6 +15,8 @@ from .models import (
     WithdrawalTransaction,
 )
 
+admin.site.site_header = 'Administration of Dash Ripple Gateway'
+
 admin.register(GatewaySettings)(SingletonModelAdmin)
 admin.site.register(DepositTransaction)
 admin.site.register(WithdrawalTransaction)
